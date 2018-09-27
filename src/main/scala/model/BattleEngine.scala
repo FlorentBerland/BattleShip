@@ -1,6 +1,7 @@
+package model
+
 import java.awt.Point
 
-import model.BattleState
 import model.battle.{FleetGrid, ShotResult}
 import model.player.Player
 
