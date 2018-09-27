@@ -1,4 +1,4 @@
-package model.battle
+package core.model.battle
 
 object ShotResult extends Enumeration {
   type Result = Value
