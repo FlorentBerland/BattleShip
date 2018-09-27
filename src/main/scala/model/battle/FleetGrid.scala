@@ -1,6 +1,8 @@
 package model.battle
 
-import java.awt.Dimension
+import java.awt.{Dimension, Point}
+
+import scala.util.{Failure, Success, Try}
 
 /**
   * The current fleet of a player
@@ -9,26 +11,31 @@ import java.awt.Dimension
   * @param ships The ships of the player
   * @param shotsReceived A set of shot coordinates performed on this grid
   */
-class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set[Dimension]) {
+class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set[Point]) {
 
   /**
     * Return a fleet grid with the shot applied on the current instance
     *
     * @param coordinates The coordinates of the shot
-    * @return A grid with the shot applied. Unmodified if the shot miss
+    * @return Success with a fleet with the shot applied. Unmodified if the shot miss. Return
+    *         Failure if the shot cannot be performed
     */
-  def shot(coordinates: Dimension): (FleetGrid, ShotResult.Result) = {
-    val resultByShip: Set[(Ship, ShotResult.Value)] = ships.map(ship => {
-      val shotShip = ship shot coordinates
-      (shotShip,
-        if(ship.aliveSquares != shotShip.aliveSquares){
-          if(shotShip.isDestroyed)
-            ShotResult.HIT_AND_SINK
-          else
-            ShotResult.HIT
-        } else ShotResult.MISS)
-    })
-    (FleetGrid(dim, resultByShip.map(_._1), shotsReceived + coordinates), resultByShip.map(_._2).max)
+  def shot(coordinates: Point): Try[(FleetGrid, ShotResult.Result)] = {
+    if(!canShot(coordinates))
+      Failure(new IllegalArgumentException("Cannot shoot at coordinates " + coordinates))
+    else {
+      val resultByShip: Set[(Ship, ShotResult.Value)] = ships.map(ship => {
+        val shotShip = ship shot coordinates
+        (shotShip,
+          if (ship.aliveSquares != shotShip.aliveSquares) {
+            if (shotShip.isDestroyed)
+              ShotResult.HIT_AND_SINK
+            else
+              ShotResult.HIT
+          } else ShotResult.MISS)
+      })
+      Success((FleetGrid(dim, resultByShip.map(_._1), shotsReceived + coordinates), resultByShip.map(_._2).max))
+    }
   }
 
 
@@ -38,10 +45,10 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     * @param coordinates The coordinates of the shot
     * @return True if the shot can be performed
     */
-  def canShot(coordinates: Dimension): Boolean =
-    coordinates.width > 0 && coordinates.height > 0 &&
-    coordinates.width <= dim.width && coordinates.height <= dim.height &&
-    shotsReceived.forall(square => square.width != coordinates.width || square.height != coordinates.height)
+  def canShot(coordinates: Point): Boolean =
+    coordinates.x > 0 && coordinates.y > 0 &&
+    coordinates.x <= dim.width && coordinates.y <= dim.height &&
+    shotsReceived.forall(square => square.x != coordinates.x || square.y != coordinates.y)
 
 
   /**
@@ -55,5 +62,5 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
 }
 
 object FleetGrid {
-  def apply(dim: Dimension, ships: Set[Ship], shotsReceived: Set[Dimension]) = new FleetGrid(dim, ships, shotsReceived)
+  def apply(dim: Dimension, ships: Set[Ship], shotsReceived: Set[Point]) = new FleetGrid(dim, ships, shotsReceived)
 }

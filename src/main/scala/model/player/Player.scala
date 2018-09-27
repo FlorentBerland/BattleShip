@@ -1,6 +1,6 @@
 package model.player
 
-import java.awt.Dimension
+import java.awt.Point
 
 import model.battle.ShotResult
 
@@ -28,6 +28,6 @@ trait Player {
     *
     * @param coordinates The coordinates of the shot
     */
-  def notifyHasBeenShot(coordinates: Dimension): Unit
+  def notifyHasBeenShot(coordinates: Point): Unit
 
 }

@@ -1,6 +1,6 @@
 package model.battle
 
-import java.awt.Dimension
+import java.awt.Point
 
 /**
   * Represent a ship during the game. It is defined by a set of
@@ -9,7 +9,7 @@ import java.awt.Dimension
   * @param squares All the squares representing the ship, defined by a location and
   *                a status: true = alive, false = destroyed
   */
-class Ship(val squares: Set[(Dimension, Boolean)]) {
+class Ship(val squares: Set[(Point, Boolean)]) {
 
   /**
     * Return a ship with the shot applied on the current instance
@@ -17,9 +17,9 @@ class Ship(val squares: Set[(Dimension, Boolean)]) {
     * @param coordinates The coordinates of the shot
     * @return A ship with the hit result on it. The ship structure is not modified if the shot misses the squares
     */
-  def shot(coordinates: Dimension): Ship =
+  def shot(coordinates: Point): Ship =
     Ship(squares.map(square => {
-      if(square._1.width == coordinates.width && square._1.height == coordinates.height)
+      if(square._1.x == coordinates.x && square._1.y == coordinates.y)
         (square._1, false)
       else
         square
@@ -43,5 +43,5 @@ class Ship(val squares: Set[(Dimension, Boolean)]) {
 }
 
 object Ship {
-  def apply(squares: Set[(Dimension, Boolean)]): Ship = new Ship(squares)
+  def apply(squares: Set[(Point, Boolean)]): Ship = new Ship(squares)
 }

@@ -1,10 +1,10 @@
-import java.awt.Dimension
+import java.awt.Point
 
 import model.BattleState
 import model.battle.{FleetGrid, ShotResult}
 import model.player.Player
 
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Manage the game and the rounds. This is the only class with an internal state and side effects
@@ -26,21 +26,18 @@ class BattleEngine(val player1: Player, val player2: Player, val fleetGrid1: Fle
     * @param player The shooter
     * @param shot The coordinates of the shot
     */
-  def play(player: Player, shot: Dimension): Unit = { // FIXME : Refactor the code
+  def play(player: Player, shot: Point): Unit = {
     if(_battleState.isNextPlayer(player)){
-      if(_battleState.targetedTurn._2.canShot(shot)){
-        val (shotFleet: FleetGrid, shotResult: ShotResult.Value) = _battleState.targetedTurn._2.shot(shot)
-        _battleState.nextTurn._1.lastRoundResult(Success(shotResult))
+      val result: Try[(FleetGrid, ShotResult.Result)] = _battleState.targetedTurn._2.shot(shot)
+      result.map(r => {
+        _battleState.nextTurn._1.lastRoundResult(Success(r._2))
         _battleState.targetedTurn._1.notifyHasBeenShot(shot)
 
         // Update the game state and give the turn to the next player
-        _battleState = BattleState((_battleState.targetedTurn._1, shotFleet), _battleState.nextTurn)
+        _battleState = BattleState((_battleState.targetedTurn._1, r._1), _battleState.nextTurn)
         _battleState.nextTurn._1.notifyCanPlay()
-
-      } else {
-        _battleState.nextTurn._1.lastRoundResult(
-          Failure(new IllegalArgumentException("Invalid coordinates: " + shot.toString)))
-      }
+      })
+      player.lastRoundResult(result.map(_._2))
     } else {
       _battleState.nextTurn._1.lastRoundResult(Failure(new IllegalStateException("This is not your turn!")))
     }
