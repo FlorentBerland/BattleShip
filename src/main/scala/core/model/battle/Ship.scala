@@ -19,7 +19,7 @@ class Ship(val squares: Set[(Point, Boolean)]) {
     */
   def shot(coordinates: Point): Ship =
     Ship(squares.map(square => {
-      if(square._1.x == coordinates.x && square._1.y == coordinates.y)
+      if(square._1.equals(coordinates))
         (square._1, false)
       else
         square
@@ -29,7 +29,7 @@ class Ship(val squares: Set[(Point, Boolean)]) {
   /**
     * Count the number of alive squares of the ship (the squares not hit)
     */
-  def aliveSquares: Int = squares.foldLeft(0)((nbOfAliveSquares, square) => nbOfAliveSquares + (if(square._2) 1 else 0))
+  def aliveSquares: Int = squares.count(_._2)
 
 
   /**

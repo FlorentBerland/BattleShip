@@ -3,8 +3,6 @@ package core.messages
 import akka.actor.ActorRef
 import java.awt.Point
 
-import player.Player
-
 
 /**
   * This message should be sent to the engine to play a round

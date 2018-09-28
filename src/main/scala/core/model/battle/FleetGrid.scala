@@ -2,7 +2,9 @@ package core.model.battle
 
 import java.awt.{Dimension, Point}
 
-import scala.util.{Failure, Success, Try}
+import core.model.{GenericShip, battle}
+
+import scala.util.{Failure, Random, Success, Try}
 
 /**
   * The current fleet of a player
@@ -52,6 +54,14 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
 
 
   /**
+    * Convert the instance into a grid to be sent to the opponent
+    */
+  def toShotGrid: ShotGrid = {
+    ShotGrid(dim, shotsReceived.map(s => (s, ShotResult.HIT))) // FIXME
+  }
+
+
+  /**
     * Indicate if all the ships are destroyed, meaning the battle is lost for the
     * FleetGrid owner
     *
@@ -59,8 +69,54 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     */
   def isDestroyed: Boolean = ships.forall(_.isDestroyed)
 
+
+  /**
+    * Tests whether the ships are correctly placed on the grid
+    *
+    * @return True if the fleet abide the game ship placing rules
+    */
+  def isValid: Boolean = {
+    // Every ship has to be in the grid:
+    if(!ships.forall(_.squares.forall(s => s._1.x > 0 && s._1.y > 0 && s._1.x <= dim.width && s._1.y <= dim.height)))
+      return false
+
+    // The ships has to be aligned horizontally or vertically:
+    if(!ships.forall(ship => {
+      // Push all the squares of the ship in two sets, one for the x and one for the y
+      val coordsSets = ship.squares.foldLeft((Set.empty[Int], Set.empty[Int]))((tuple, square) => {
+        (tuple._1 + square._1.x, tuple._2 + square._1.y)
+      })
+      // If the ship is aligned, one set must be size 1 and the other one must be greater than 1
+      (coordsSets._1.size == 1 && coordsSets._2.size > 1) || (coordsSets._1.size > 1 && coordsSets._2.size == 1)
+    }))
+      return false
+
+    // The ships should not overlap each other:
+    // TODO
+
+    // The ships should not be split:
+    // TODO
+
+    true
+  }
+
 }
 
 object FleetGrid {
+
+  private val _rand = new Random()
+
   def apply(dim: Dimension, ships: Set[Ship], shotsReceived: Set[Point]) = new FleetGrid(dim, ships, shotsReceived)
+
+  /**
+    * Randomly generates a fleet based on the given configuration
+    *
+    * @param dim The dimensions of the grid
+    * @param expectedShips The fleet composition
+    * @return A new fleet
+    */
+  def apply(dim: Dimension, expectedShips: Set[GenericShip]): FleetGrid = {
+    new FleetGrid(dim, Set.empty, Set.empty)
+  }
+
 }

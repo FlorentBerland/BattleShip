@@ -1,6 +1,6 @@
 package core.model.battle
 
-import java.awt.Dimension
+import java.awt.{Dimension, Point}
 
 /**
   * This class represent the grid to play
@@ -8,14 +8,9 @@ import java.awt.Dimension
   * @param dim The dimensions of the grid
   * @param shotsPerformed All the shots by the grid owner
   */
-@deprecated("This class is shit")
-class ShotGrid(val dim: Dimension, val shotsPerformed: Set[(Dimension, ShotResult.Result)]) {
-
-// TODO
-
-}
+class ShotGrid(val dim: Dimension, val shotsPerformed: Set[(Point, ShotResult.Result)])
 
 object ShotGrid {
-  def apply(dim: Dimension, shotsPerformed: Set[(Dimension, ShotResult.Result)]): ShotGrid =
+  def apply(dim: Dimension, shotsPerformed: Set[(Point, ShotResult.Result)]): ShotGrid =
     new ShotGrid(dim, shotsPerformed)
 }

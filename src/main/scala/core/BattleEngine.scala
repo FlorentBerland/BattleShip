@@ -30,12 +30,12 @@ class BattleEngine extends Actor {
     _battleState = BattleState(msg.firstPlayer, msg.otherPlayer)
   }
 
-  private def onPlay(msg: Play): Unit = {
+  private def onPlay(msg: Play): Unit = { // TODO: Refactor again
     val coords: Point = msg.shotCoordinates
     if(_battleState.isNextPlayer(msg.sender)){
       val result: Try[(FleetGrid, ShotResult.Result)] = _battleState.targetedTurn._2.shot(coords)
       // The sender receives the result (whether succeeded or failed)
-      msg.sender ! new LastRoundResult(result.map(r => (coords, r._2)))
+      msg.sender ! new LastRoundResult(self, result.map(r => (coords, r._2)))
       result.map(r => {
         _battleState.targetedTurn._1 ! new NotifyHasBeenShot(coords)
 
@@ -50,7 +50,7 @@ class BattleEngine extends Actor {
         }
       })
     } else {
-      msg.sender ! new LastRoundResult(Failure(new IllegalStateException("This is not your turn!")))
+      msg.sender ! new LastRoundResult(self, Failure(new IllegalStateException("This is not your turn!")))
     }
   }
 }
