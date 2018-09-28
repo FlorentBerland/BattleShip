@@ -1,7 +1,7 @@
 package core.messages
 
 import akka.actor.ActorRef
-import core.model.battle.FleetGrid
+import core.model.FleetGrid
 
 /**
   * This message should be sent to the engine to start the game with both players configurations

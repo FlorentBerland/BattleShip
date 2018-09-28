@@ -3,7 +3,7 @@ package core.messages
 import java.awt.Point
 
 import akka.actor.ActorRef
-import core.model.battle.ShotResult
+import core.model.ShotResult
 
 import scala.util.Try
 

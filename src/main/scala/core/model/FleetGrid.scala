@@ -1,8 +1,6 @@
-package core.model.battle
+package core.model
 
 import java.awt.{Dimension, Point}
-
-import core.model.{GenericShip, battle}
 
 import scala.util.{Failure, Random, Success, Try}
 

@@ -1,8 +1,6 @@
 package util
 
-import core.model.battle.{FleetGrid, Ship, ShotGrid, ShotResult}
-
-import scala.collection.immutable.Stream.Empty
+import core.model.{Ship, ShotGrid, ShotResult, FleetGrid}
 
 /**
   * This object provides functions to help for advanced fleet operations
@@ -35,46 +33,36 @@ object FleetHelper {
 
 
   /**
-    * Return the longest sequence of true values horizontally aligned for each square from left to right
+    * Return the longest sequence of values vertically aligned that match a predicate,
     *
     * @param matrix A matrix of booleans
+    * @param predicate A matcher for the values
     * @return A matrix of longest sequences of true values found
     */
-  def longestHorizontalSequence(matrix: Array[Array[Boolean]]): Array[Array[Int]] = {
+  def longestVerticalSequence[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
 
-    def longestSeq(row: List[Boolean]): List[Int] = {
-      if(row.tail == Nil) if(row.head) 1 :: Nil else 0 :: Nil
+    def longestSeq(row: List[T]): List[Int] = {
+      if(row == Nil) Nil
+      else if(row.tail == Nil) if(predicate(row.head)) 1 :: Nil else 0 :: Nil
       else {
         val seq = longestSeq(row.tail)
-        if(row.head) (seq.tail.head + 1) :: seq
+        if(predicate(row.head)) (seq.tail.head + 1) :: seq
         else 0 :: seq
       }
     }
 
-    val sequences: Array[Array[Int]] = matrix.map(row => longestSeq(row.toList).toArray)
-    sequences
+    matrix.map(row => longestSeq(row.toList).toArray)
   }
 
 
   /**
-    * Return the longest sequence of true values vertically aligned for each square from left to right
+    * Return the longest sequence of true values horizontally aligned for each square from left to right
     *
     * @param matrix A matrix of booleans
+    * @param predicate A matcher for the values
     * @return A matrix of longest sequences of true values found
     */
-  def longestVerticalSequence(matrix: Array[Array[Boolean]]): Array[Array[Int]] = {
-// TODO: horizontal atm
-    def longestSeq(row: List[Boolean]): List[Int] = {
-      if(row.tail == Nil) if(row.head) 1 :: Nil else 0 :: Nil
-      else {
-        val seq = longestSeq(row.tail)
-        if(row.head) (seq.tail.head + 1) :: seq
-        else 0 :: seq
-      }
-    }
-
-    val sequences: Array[Array[Int]] = matrix.map(row => longestSeq(row.toList).toArray)
-    sequences
-  }
+  def longestHorizontalSequence[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] =
+    longestVerticalSequence(matrix.transpose, predicate).transpose
 
 }

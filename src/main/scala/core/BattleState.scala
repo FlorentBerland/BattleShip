@@ -1,7 +1,7 @@
 package core
 
 import akka.actor.ActorRef
-import core.model.battle.FleetGrid
+import core.model.FleetGrid
 
 /**
   * Store the state of the battle

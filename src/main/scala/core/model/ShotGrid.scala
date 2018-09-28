@@ -1,4 +1,4 @@
-package core.model.battle
+package core.model
 
 import java.awt.{Dimension, Point}
 

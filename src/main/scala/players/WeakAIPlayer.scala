@@ -11,7 +11,7 @@ import scala.util.{Failure, Random}
 /**
   * Basic AI, should randomly shot at the opponent's fleet
   */
-class WeakAI extends Actor {
+class WeakAIPlayer extends Actor {
 
   override def receive: Receive = {
     case msg: CreateFleet => onCreateFleet(msg)
@@ -46,6 +46,6 @@ class WeakAI extends Actor {
 
 }
 
-object WeakAI {
+object WeakAIPlayer {
   val NAME: String = "Weak AI"
 }

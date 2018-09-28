@@ -4,7 +4,7 @@ import java.awt.Point
 
 import akka.actor.{Actor, ActorRef}
 import core.messages._
-import core.model.battle.{FleetGrid, ShotResult}
+import core.model.{FleetGrid, ShotResult}
 
 import scala.util.{Failure, Try}
 
@@ -40,8 +40,8 @@ class BattleEngine extends Actor {
         _battleState.targetedTurn._1 ! new NotifyHasBeenShot(coords)
 
         if(_battleState.targetedTurn._2.isDestroyed){
-          _battleState.nextTurn._1 ! new GameEnd(self, GameOver.VICTORY, r._1)
-          _battleState.targetedTurn._1 ! new GameEnd(self, GameOver.DEFEAT, _battleState.nextTurn._2)
+          _battleState.nextTurn._1 ! new GameOver(self, GameEnd.VICTORY, r._1)
+          _battleState.targetedTurn._1 ! new GameOver(self, GameEnd.DEFEAT, _battleState.nextTurn._2)
           // TODO: Notify the parent of the end of the game to terminate the actor system
         } else {
           // Update the game state and give the turn to the next player
@@ -53,8 +53,4 @@ class BattleEngine extends Actor {
       msg.sender ! new LastRoundResult(self, Failure(new IllegalStateException("This is not your turn!")))
     }
   }
-}
-
-object BattleEngine {
-  def apply: BattleEngine = new BattleEngine
 }

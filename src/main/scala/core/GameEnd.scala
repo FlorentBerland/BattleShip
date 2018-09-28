@@ -1,6 +1,6 @@
 package core
 
-object GameOver extends Enumeration {
+object GameEnd extends Enumeration {
   type End = Value
   val VICTORY, DEFEAT, STOPPED = Value
 }

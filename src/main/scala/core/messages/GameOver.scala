@@ -1,8 +1,8 @@
 package core.messages
 
 import akka.actor.ActorRef
-import core.GameOver
-import core.model.battle.FleetGrid
+import core.GameEnd
+import core.model.FleetGrid
 
 
 /**
@@ -12,4 +12,4 @@ import core.model.battle.FleetGrid
   * @param end The end of the game
   * @param opponentFleet The final fleet of the opponent
   */
-class GameEnd(val sender: ActorRef, val end: GameOver.End, val opponentFleet: FleetGrid)
+class GameOver(val sender: ActorRef, val end: GameEnd.End, val opponentFleet: FleetGrid)

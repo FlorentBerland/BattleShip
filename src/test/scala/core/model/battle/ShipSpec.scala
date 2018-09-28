@@ -2,6 +2,7 @@ package core.model.battle
 
 import java.awt.Point
 
+import core.model.Ship
 import org.scalatest.{FlatSpec, Matchers}
 
 class ShipSpec extends FlatSpec with Matchers {
