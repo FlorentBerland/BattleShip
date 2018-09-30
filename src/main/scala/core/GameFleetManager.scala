@@ -23,6 +23,7 @@ class GameFleetManager extends Actor {
   private def onFleetCreated(msg: FleetCreated): Unit = {
     println("onFleetCreated")
     if(_hasToQuit) {
+      println("has to quit")
       context stop msg.nextActor
       context stop self
       implicit val executionContext: ExecutionContext = context.system.dispatcher

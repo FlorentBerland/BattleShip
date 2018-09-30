@@ -1,8 +1,7 @@
-package core.model.battle
+package core.model
 
 import java.awt.{Dimension, Point}
 
-import core.model.{FleetGrid, Ship, ShotResult}
 import org.scalatest.{FlatSpec, Matchers}
 
 import scala.util.Success

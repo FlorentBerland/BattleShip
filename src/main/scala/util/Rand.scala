@@ -9,6 +9,6 @@ object Rand {
 
   private val _random = new Random()
 
-  def apply: Random = _random
+  def r: Random = _random
 
 }

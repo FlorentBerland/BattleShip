@@ -2,6 +2,8 @@ package core.model
 
 import java.awt.{Dimension, Point}
 
+import util.{FleetHelper, Rand}
+
 import scala.util.{Failure, Random, Success, Try}
 
 /**
@@ -98,6 +100,15 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     true
   }
 
+
+  /**
+    * Add a ship to the fleet
+    *
+    * @param ship The ship to add
+    * @return A fleet with the new ship
+    */
+  def +(ship: Ship): FleetGrid = FleetGrid(dim, ships + ship, shotsReceived)
+
 }
 
 object FleetGrid {
@@ -114,7 +125,59 @@ object FleetGrid {
     * @return A new fleet
     */
   def apply(dim: Dimension, expectedShips: Set[GenericShip]): FleetGrid = {
-    new FleetGrid(dim, Set.empty, Set.empty)
+    var fleet = new FleetGrid(dim, Set.empty, Set.empty)
+    if(expectedShips.isEmpty)
+      return fleet
+
+    // Randomly place the first ship
+    val firstShip: Ship = Rand.r.nextInt(2) match {
+      case 0 => // Horizontal
+        val firstPoint =
+          new Point(Rand.r.nextInt(dim.width - expectedShips.head.size) + 1, Rand.r.nextInt(dim.height) + 1)
+        Ship((0 until expectedShips.head.size).map(i => (new Point(i + firstPoint.x, firstPoint.y), true)).toSet)
+      case 1 => // Vertical
+        val firstPoint =
+          new Point(Rand.r.nextInt(dim.width) + 1, Rand.r.nextInt(dim.height - expectedShips.head.size) + 1)
+        Ship((0 until expectedShips.head.size).map(i => (new Point(firstPoint.x, i + firstPoint.y), true)).toSet)
+    }
+    fleet = FleetGrid(dim, Set(firstShip), Set.empty)
+
+    // Place the other ships in order to have the best distribution
+    expectedShips.tail.foreach(ship => {
+      val flatFleet = FleetHelper.flatten(fleet)
+
+      // Compute the longest sequences of vertical or horizontal empty square sequences
+      val (arrayOfLongestSequence, isHorizontal) = Rand.r.nextInt(2) match {
+        case 0 =>
+          (FleetHelper.longestHorizontalSequence[Option[Ship]](flatFleet, _.isEmpty), true)
+        case 1 =>
+          (FleetHelper.longestVerticalSequence[Option[Ship]](flatFleet, _.isEmpty), false)
+      }
+
+      val longestSeq: Int = arrayOfLongestSequence.map(_.max).max
+      // x and y are the array coordinates of the longest sequence of empty squares found
+      val x = arrayOfLongestSequence.indexWhere(row => row.max == longestSeq)
+      val y = arrayOfLongestSequence(x).indexWhere(_ == longestSeq)
+
+      // Now, find the middle of this empty seq to center the ship on it
+      // Ideal value is middle of the sequence - (ship size / 2)
+      val newShip: Ship = if(isHorizontal){
+        val firstPoint = new Point(x + longestSeq/2 - ship.size/2 + 1, y + 1)
+        Ship((0 until ship.size).map(i => (new Point(firstPoint.x + i, firstPoint.y), true)).toSet)
+      } else {
+        val firstPoint = new Point(x + 1, y + longestSeq/2 - ship.size/2 + 1)
+        Ship((0 until ship.size).map(i => (new Point(firstPoint.x, firstPoint.y + i), true)).toSet)
+      }
+
+      // Add it to the fleet
+      fleet = FleetGrid(dim, fleet.ships + newShip, fleet.shotsReceived)
+    })
+
+    fleet
   }
 
+  def printArray[T](array: Array[Array[T]]): Unit = {
+    array.transpose.toList.foreach(row => { row.foreach(a => print(a + "\t")); println() })
+  }
 }
+

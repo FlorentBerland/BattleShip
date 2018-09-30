@@ -1,8 +1,7 @@
-package core.model.battle
+package core.model
 
 import java.awt.Point
 
-import core.model.Ship
 import org.scalatest.{FlatSpec, Matchers}
 
 class ShipSpec extends FlatSpec with Matchers {

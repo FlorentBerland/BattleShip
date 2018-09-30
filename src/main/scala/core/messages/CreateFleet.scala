@@ -13,4 +13,4 @@ import core.model.GenericShip
   * @param dimension The size of the grid
   * @param ships The fleet configuration he has to use
   */
-class CreateFleet(val nextActor: ActorRef, val dimension: Dimension, val ships: Set[(GenericShip, Int)])
+class CreateFleet(val nextActor: ActorRef, val dimension: Dimension, val ships: Set[GenericShip])

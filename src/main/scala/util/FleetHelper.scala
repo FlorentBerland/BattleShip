@@ -1,6 +1,8 @@
 package util
 
-import core.model.{Ship, ShotGrid, ShotResult, FleetGrid}
+import java.awt.Dimension
+
+import core.model.{FleetGrid, Ship, ShotGrid, ShotResult}
 
 /**
   * This object provides functions to help for advanced fleet operations
@@ -15,7 +17,7 @@ object FleetHelper {
     */
   def flatten(fleetGrid: FleetGrid): Array[Array[Option[Ship]]] = {
     val matrix: Array[Array[Option[Ship]]] = Array.fill(fleetGrid.dim.width)(Array.fill(fleetGrid.dim.height)(None))
-    fleetGrid.ships.map(ship => ship.squares.map(square => matrix(square._1.x)(square._1.y) = Some(ship)))
+    fleetGrid.ships.map(ship => ship.squares.map(square => {matrix(square._1.x - 1)(square._1.y - 1) = Some(ship)}))
     matrix
   }
 
@@ -27,13 +29,14 @@ object FleetHelper {
     */
   def flatten(shotGrid: ShotGrid): Array[Array[Option[ShotResult.Value]]] = {
     val matrix: Array[Array[Option[ShotResult.Value]]] = Array.fill(shotGrid.dim.width)(Array.fill(shotGrid.dim.height)(None))
-    shotGrid.shotsPerformed.map(shot =>  matrix(shot._1.x)(shot._1.y) = Some(shot._2))
+    shotGrid.shotsPerformed.map(shot =>  matrix(shot._1.x - 1)(shot._1.y - 1) = Some(shot._2))
     matrix
   }
 
 
   /**
-    * Return the longest sequence of values vertically aligned that match a predicate,
+    * Return the longest sequence of values vertically aligned that match a predicate. It has to contain
+    * at least one element
     *
     * @param matrix A matrix of booleans
     * @param predicate A matcher for the values
@@ -43,10 +46,10 @@ object FleetHelper {
 
     def longestSeq(row: List[T]): List[Int] = {
       if(row == Nil) Nil
-      else if(row.tail == Nil) if(predicate(row.head)) 1 :: Nil else 0 :: Nil
+      else if(row.tail == Nil) { if(predicate(row.head)) 1 :: Nil else 0 :: Nil }
       else {
         val seq = longestSeq(row.tail)
-        if(predicate(row.head)) (seq.tail.head + 1) :: seq
+        if(predicate(row.head)) (seq.head + 1) :: seq
         else 0 :: seq
       }
     }
@@ -64,5 +67,43 @@ object FleetHelper {
     */
   def longestHorizontalSequence[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] =
     longestVerticalSequence(matrix.transpose, predicate).transpose
+
+
+  /**
+    * Return a matrix with the same dimensions as the matrix parameter. Each value of the matrix is the distance
+    * to the nearest value in the original matrix that satisfies the predicate
+    *
+    * @param matrix The matrix of values to evaluate
+    * @param predicate The filter
+    * @return A matrix of taxicab distances, 0 for the values that satisfied the predicate
+    */
+  def distanceToNearestObtacle[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
+    val computingDistances: Array[Array[Option[Int]]] = matrix.map(_.map(t => if(predicate(t))Some(0) else None))
+
+    // In the worst case, the distances have to be computed the number (biggest dimension) times - 1
+    (0 until (matrix.length max matrix.map(_.length).max)).foreach(_ => {
+      matrix.indices.foreach(i => {
+        matrix(i).indices.foreach(j => {
+          matrix(i)(j) match {
+            case None => // Needs to be computed: the value is the min of the neighbor values + 1
+              val top: Option[Int] = if (i - 1 >= 0) computingDistances(i - 1)(j) else None
+              val bottom: Option[Int] = if (i + 1 < matrix.length) computingDistances(i + 1)(j) else None
+              val left: Option[Int] = if (j - 1 >= 0) computingDistances(i)(j - 1) else None
+              val right: Option[Int] = if (j + 1 < matrix(i).length) computingDistances(i)(j + 1) else None
+              computingDistances(i)(j) = min(top, min(bottom, min(left, right))).map(_ + 1)
+            case _ =>
+          }
+        })
+      })
+    })
+
+    def min(a: Option[Int], b: Option[Int]): Option[Int] = {
+      if(a.isEmpty) b
+      else if(b.isEmpty) a
+      else Some(a.get min b.get)
+    }
+
+    computingDistances.map(_.map(_.getOrElse(-1)))
+  }
 
 }
