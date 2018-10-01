@@ -36,7 +36,7 @@ class GameConfigManager extends Actor {
       case _ => Props[WeakAIPlayer]
     }) ! new CreateFleet(fleetManager, DefaultGameConfig.dimensions, DefaultGameConfig.ships)
     msg.nextActor ! new CreateFleet(fleetManager, DefaultGameConfig.dimensions, DefaultGameConfig.ships)
-    context stop self
+    //context stop self
   }
 
 

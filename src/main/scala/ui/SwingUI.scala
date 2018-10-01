@@ -1,11 +1,11 @@
 package ui
 
 import java.awt._
-import java.awt.event.{MouseEvent, MouseListener, WindowAdapter, WindowEvent}
+import java.awt.event.{MouseEvent, MouseListener}
 
 import akka.actor.ActorRef
-import core.messages.{QuitGame, UseGameConfig}
-import core.model.{FleetGrid, GenericShip, Ship}
+import core.messages.{FleetCreated, QuitGame, UseGameConfig}
+import core.model.{FleetGrid, GenericShip, Ship, ShotGrid}
 import javax.swing._
 import javax.swing.border.EmptyBorder
 
@@ -16,11 +16,6 @@ class SwingUI(val player: ActorRef) extends JFrame {
   init()
 
   def displayChoose(nextActor: ActorRef): Unit = {
-    this.getWindowListeners.map(wl => removeWindowListener(wl))
-    this.addWindowListener(new WindowAdapter {
-      override def windowClosing(e: WindowEvent): Unit = nextActor ! new QuitGame(player)
-    })
-
     this.refresh(new JPanel(){
       this.setLayout(new BorderLayout())
       this.add(new JLabel("Choose your opponent"), BorderLayout.NORTH)
@@ -40,12 +35,8 @@ class SwingUI(val player: ActorRef) extends JFrame {
   }
 
   def displayCreateFleet(nextActor: ActorRef, dim: Dimension, expectedShips: Set[GenericShip]): Unit = {
-    this.getWindowListeners.map(wl => removeWindowListener(wl))
-    this.addWindowListener(new WindowAdapter {
-      override def windowClosing(e: WindowEvent): Unit = nextActor ! new QuitGame(player)
-    })
     refresh(new JPanel(){
-      var editPanel = new FleetCreationPanel(FleetGrid(dim, Set.empty, Set.empty))
+      val editPanel = new FleetCreationPanel(FleetGrid(dim, Set.empty, Set.empty), new Dimension(400, 400), 10, 10, 10, 10)
       this.setLayout(new BorderLayout())
 
       // Ship buttons panel
@@ -54,7 +45,7 @@ class SwingUI(val player: ActorRef) extends JFrame {
         this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS))
         expectedShips.map(es => this.add(button(es.name + " " + es.size,
           () => editPanel.dragShip(es, true,
-            (ship: Option[Ship]) => ship.map(s => {
+            (ship: Option[Ship]) => ship.foreach(s => {
               val newFleet = editPanel.fleet + s
               if(newFleet.isValid){
                 editPanel.fleet = newFleet
@@ -74,6 +65,7 @@ class SwingUI(val player: ActorRef) extends JFrame {
       // Footer panel
       this.add(new JPanel(){
         this.setLayout(new FlowLayout())
+        this.add(new JLabel("Right click while dragging to flip the ship    "))
         this.add(button("Clear all", () => {
           editPanel.fleet = FleetGrid(dim, Set.empty, Set.empty)
           editPanel.paint(editPanel.getGraphics)
@@ -82,8 +74,26 @@ class SwingUI(val player: ActorRef) extends JFrame {
           editPanel.fleet = FleetGrid(dim, expectedShips)
           editPanel.paint(editPanel.getGraphics)
         }))
-        this.add(button("Ready !", () => Unit))
+        this.add(button("Ready !", () => nextActor ! new FleetCreated(player, editPanel.fleet)))
       }, BorderLayout.SOUTH)
+    })
+  }
+
+  def displayGame(fleetGrid: FleetGrid, shotGrid: ShotGrid): Unit = {
+    this.refresh(new JPanel(){
+      this.setLayout(new BorderLayout())
+
+      // Header
+      this.add(new JPanel(){
+        this.setBackground(new Color(100, 110, 200))
+        this.add(new JLabel("Play !!!"){ this.setForeground(Color.white) })
+      }, BorderLayout.NORTH)
+
+      // Fleet grid
+      this.add(new DisplayFleetPanel(fleetGrid, new Dimension(400, 400), 10, 10, 10, 10), BorderLayout.WEST)
+
+      // Play grid
+      this.add(new GameFleetPanel(shotGrid.toHeuristicFleetGrid, new Dimension(400, 400), 10, 10, 10, 10), BorderLayout.EAST)
     })
   }
 
@@ -91,6 +101,7 @@ class SwingUI(val player: ActorRef) extends JFrame {
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
     this.setVisible(true)
     refresh(new JPanel())
+    this.requestFocus()
   }
 
   private def refresh(comp: Component): Unit = {

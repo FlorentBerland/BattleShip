@@ -4,31 +4,37 @@ import java.awt.{Color, Dimension, Graphics, Point}
 import java.awt.event.{MouseEvent, MouseListener, MouseMotionListener}
 
 import core.model.{FleetGrid, GenericShip, Ship}
-import javax.swing.JPanel
+
 
 /**
-  * The controller for the grid display on the screen.
+  * Manage the ships positioning during the fleet creation
   *
-  * @param fleet The fleet to display. It is variable for needs of performance (instead of recreating
-  *              a controller on each update)
+  * @param initFleet The fleet to display
+  * @param dimensions The size of the grid
+  * @param mTop The top margin
+  * @param mBottom The bottom margin
+  * @param mLeft The left margin
+  * @param mRight The right margin
   */
-class FleetCreationPanel(var fleet: FleetGrid) extends JPanel with MouseMotionListener with MouseListener {
+class FleetCreationPanel(initFleet: FleetGrid,
+                         dimensions: Dimension,
+                         mTop: Int,
+                         mBottom: Int,
+                         mLeft: Int,
+                         mRight: Int
+                       ) extends DisplayFleetPanel(initFleet, dimensions, mTop, mBottom, mLeft, mRight)
+                          with MouseListener with MouseMotionListener
+{
 
-  private val _containerSize = new Dimension(420, 420)
-  private val _size = new Dimension(400, 400)
-  private val _squareSize = new Dimension(_size.width/fleet.dim.width, _size.height/fleet.dim.height)
-
-  // Editing properties
   private var _shipDragged: Option[GenericShip] = None
   private var _isHorizontal: Option[Boolean] = None // The direction of the ship dragged
-  private var _cbPlaceShip: Option[Option[Ship] => Unit] = None // WHat to do on a left click (place the ship)
+  private var _cbPlaceShip: Option[Option[Ship] => Unit] = None // What to do on a left click (place the ship)
 
   init()
 
   private def init(): Unit = {
     this.addMouseMotionListener(this)
     this.addMouseListener(this)
-    this.setPreferredSize(_containerSize)
   }
 
   /**
@@ -44,47 +50,18 @@ class FleetCreationPanel(var fleet: FleetGrid) extends JPanel with MouseMotionLi
     _cbPlaceShip = Some(cb)
   }
 
+
   override def paint(g: Graphics): Unit = {
     super.paint(g)
-    g.setColor(Color.gray)
-    (0 until fleet.dim.width).map(i => {
-      (0 until fleet.dim.height ).map(j => {
-        g.drawRect(i*_squareSize.width, j*_squareSize.height, _squareSize.width, _squareSize.height)
-      })
-    })
 
-    fleet.ships.map(_.squares.map(square => fillSquare(g, new Point(square._1.x - 1, square._1.y - 1), Color.darkGray)))
-
-    squareCursor(this.getMousePosition).map(fillSquare(g, _, Color.gray))
+    squareCursor(this.getMousePosition).foreach(fillSquare(g, _, Color.gray))
 
     computeShip(_shipDragged, _isHorizontal, squareCursor(this.getMousePosition)).
-      map(_.squares.map(sq => fillSquare(getGraphics, new Point(sq._1.x - 1, sq._1.y - 1), Color.blue)))
+      foreach(_.squares.foreach(sq => fillSquare(getGraphics, new Point(sq._1.x - 1, sq._1.y - 1), Color.blue)))
 
-    g.setColor(Color.darkGray)
-    g.drawString("Right click to flip a ship", 10, 415)
-  }
-
-  protected def fillSquare(g: Graphics, square: Point, color: Color): Unit = {
-    g.setColor(color)
-    g.fillRect(square.x*_squareSize.width, square.y*_squareSize.height, _squareSize.width, _squareSize.height)
-  }
-
-  /**
-    * Return the square overlapped by the cursor
-    *
-    * @param mouseLocation The location relative to the panel
-    * @return The square overlapped
-    */
-  private def squareCursor(mouseLocation: Point): Option[Point] = {
-    if(mouseLocation == null)
-      None
-    else {
-      val square = new Point(mouseLocation.x / _squareSize.width, mouseLocation.y / _squareSize.height)
-      if (square.x < 0 || square.y < 0 || square.x >= fleet.dim.width || square.y >= fleet.dim.height)
-        None
-      else
-        Some(square)
-    }
+    g.setColor(Color.white)
+    g.fillRect(dim.width + marginLeft + 1, 0, 200, dim.height + marginTop + 200)
+    g.fillRect(0, dim.height + marginTop + 1, dim.width + marginLeft + 200, 200)
   }
 
   /**
@@ -101,6 +78,9 @@ class FleetCreationPanel(var fleet: FleetGrid) extends JPanel with MouseMotionLi
     }))
   }
 
+
+  // Mouse events part
+
   override def mouseMoved(e: MouseEvent): Unit = {
     paint(this.getGraphics)
   }
@@ -108,7 +88,7 @@ class FleetCreationPanel(var fleet: FleetGrid) extends JPanel with MouseMotionLi
   override def mouseClicked(e: MouseEvent): Unit = {
     e.getButton match {
       case 1 => // Left click
-        _cbPlaceShip.map(_(computeShip(_shipDragged, _isHorizontal, squareCursor(getMousePosition))))
+        _cbPlaceShip.foreach(_(computeShip(_shipDragged, _isHorizontal, squareCursor(getMousePosition))))
         _shipDragged = None
         _isHorizontal = None
         _cbPlaceShip = None

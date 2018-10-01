@@ -1,19 +1,23 @@
 package players
 
-import java.awt.{Dimension, Point}
+import java.awt.Point
 
 import akka.actor.{Actor, ActorRef}
 import core.messages._
+import core.model.{FleetGrid, ShotGrid}
+import util.Rand
 
-import scala.util.{Failure, Random}
+import scala.util.Failure
 
 
 /**
-  * Basic AI, should randomly shot at the opponent's fleet
+  * Basic AI, should randomly shot at the opponent's fleet. This AI is shy an forfeits the fight
+  * if asked to choose an opponent
   */
 class WeakAIPlayer extends Actor {
 
   override def receive: Receive = {
+    case msg: ChooseGameConfig => onChooseGameConfig(msg)
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
@@ -21,27 +25,27 @@ class WeakAIPlayer extends Actor {
     case _ =>
   }
 
-  private val _random = new Random()
-  private var _dim: Dimension = _
+  private def onChooseGameConfig(msg: ChooseGameConfig): Unit = {
+    msg.nextActor ! new QuitGame(self)
+  }
 
   private def onCreateFleet(msg: CreateFleet): Unit = {
-    _dim = msg.dimension
-    // TODO: Implement the fleet building or delegate it to another class/actor
+    msg.nextActor ! new FleetCreated(self, FleetGrid(msg.dimension, msg.ships))
   }
 
   private def onNotifyCanPlay(msg: NotifyCanPlay): Unit = {
-    play(msg.sender)
+    play(msg.nextActor, msg.shotGrid)
   }
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
-      case Failure(_) => play(msg.sender)
+      case Failure(_) => play(msg.sender, msg.shotGrid)
       case _ =>
     }
   }
 
-  private def play(sender: ActorRef): Unit = {
-    sender ! new Play(self, new Point(_random.nextInt(_dim.width + 1), _random.nextInt(_dim.height + 1)))
+  private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
+    sender ! new Play(self, new Point(Rand.r.nextInt(shotGrid.dim.width + 1), Rand.r.nextInt(shotGrid.dim.height + 1)))
   }
 
 }

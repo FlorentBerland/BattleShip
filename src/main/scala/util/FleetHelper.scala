@@ -1,7 +1,5 @@
 package util
 
-import java.awt.Dimension
-
 import core.model.{FleetGrid, Ship, ShotGrid, ShotResult}
 
 /**
@@ -29,7 +27,7 @@ object FleetHelper {
     */
   def flatten(shotGrid: ShotGrid): Array[Array[Option[ShotResult.Value]]] = {
     val matrix: Array[Array[Option[ShotResult.Value]]] = Array.fill(shotGrid.dim.width)(Array.fill(shotGrid.dim.height)(None))
-    shotGrid.shotsPerformed.map(shot =>  matrix(shot._1.x - 1)(shot._1.y - 1) = Some(shot._2))
+    shotGrid.shotsPerformed.foreach(shot =>  matrix(shot._1.x - 1)(shot._1.y - 1) = Some(shot._2))
     matrix
   }
 
@@ -61,7 +59,7 @@ object FleetHelper {
   /**
     * Return the longest sequence of true values horizontally aligned for each square from left to right
     *
-    * @param matrix A matrix of booleans
+    * @param matrix A matrix of values to convert
     * @param predicate A matcher for the values
     * @return A matrix of longest sequences of true values found
     */
@@ -77,10 +75,10 @@ object FleetHelper {
     * @param predicate The filter
     * @return A matrix of taxicab distances, 0 for the values that satisfied the predicate
     */
-  def distanceToNearestObtacle[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
+  def distanceToNearestObstacle[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
     val computingDistances: Array[Array[Option[Int]]] = matrix.map(_.map(t => if(predicate(t))Some(0) else None))
 
-    // In the worst case, the distances have to be computed the number (biggest dimension) times - 1
+    // In the worst case, the distances have to be computed the number of (biggest dimensions) times - 1
     (0 until (matrix.length max matrix.map(_.length).max)).foreach(_ => {
       matrix.indices.foreach(i => {
         matrix(i).indices.foreach(j => {

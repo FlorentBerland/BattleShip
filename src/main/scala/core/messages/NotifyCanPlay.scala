@@ -1,11 +1,13 @@
 package core.messages
 
 import akka.actor.ActorRef
+import core.model.ShotGrid
 
 
 /**
   * Notify the player that he can now play
   *
-  * @param sender The sender of the message
+  * @param nextActor The actor to send back an answer
+  * @param shotGrid The play grid the player should use
   */
-class NotifyCanPlay(val sender: ActorRef)
+class NotifyCanPlay(val nextActor: ActorRef, val shotGrid: ShotGrid)

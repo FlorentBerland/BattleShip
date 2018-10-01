@@ -22,9 +22,9 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     * @return Success with a fleet with the shot applied. Unmodified if the shot miss. Return
     *         Failure if the shot cannot be performed
     */
-  def shot(coordinates: Point): Try[(FleetGrid, ShotResult.Result)] = {
+  def shot(coordinates: Point): (FleetGrid, Try[ShotResult.Result]) = {
     if(!canShot(coordinates))
-      Failure(new IllegalArgumentException("Cannot shoot at coordinates " + coordinates))
+      (this, Failure(new IllegalArgumentException("Cannot shoot at coordinates " + coordinates)))
     else {
       val resultByShip: Set[(Ship, ShotResult.Value)] = ships.map(ship => {
         val shotShip = ship shot coordinates
@@ -36,7 +36,7 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
               ShotResult.HIT
           } else ShotResult.MISS)
       })
-      Success((FleetGrid(dim, resultByShip.map(_._1), shotsReceived + coordinates), resultByShip.map(_._2).max))
+      (FleetGrid(dim, resultByShip.map(_._1), shotsReceived + coordinates), Success(resultByShip.map(_._2).max))
     }
   }
 
@@ -80,22 +80,22 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     if(!ships.forall(_.squares.forall(s => s._1.x > 0 && s._1.y > 0 && s._1.x <= dim.width && s._1.y <= dim.height)))
       return false
 
-    // The ships has to be aligned horizontally or vertically:
+    // The ships has to be aligned horizontally or vertically and in one part:
     if(!ships.forall(ship => {
       // Push all the squares of the ship in two sets, one for the x and one for the y
       val coordsSets = ship.squares.foldLeft((Set.empty[Int], Set.empty[Int]))((tuple, square) => {
         (tuple._1 + square._1.x, tuple._2 + square._1.y)
       })
-      // If the ship is aligned, one set must be size 1 and the other one must be greater than 1
-      (coordsSets._1.size == 1 && coordsSets._2.size > 1) || (coordsSets._1.size > 1 && coordsSets._2.size == 1)
+      // If the ship is aligned, one set must be size 1 and the other one must be the size of the ship
+      (coordsSets._1.size == 1 && coordsSets._2.size == ship.squares.size) ||
+        (coordsSets._1.size == ship.squares.size && coordsSets._2.size == 1)
     }))
       return false
 
     // The ships should not overlap each other:
-    // TODO
-
-    // The ships should not be split:
-    // TODO
+    val flatFleet = FleetHelper.flatten(this)
+    if(!ships.forall(ship => ship.squares.forall(square => flatFleet(square._1.x-1)(square._1.y-1).contains(ship))))
+      return false
 
     true
   }
