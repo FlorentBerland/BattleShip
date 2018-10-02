@@ -57,7 +57,9 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     * Convert the instance into a grid to be sent to the opponent
     */
   def toShotGrid: ShotGrid = {
-    ShotGrid(dim, shotsReceived.map(s => (s, ShotResult.HIT))) // FIXME
+    val flatFleet = FleetHelper.flatten(this)
+    ShotGrid(dim, shotsReceived.map(s =>
+      (s, if (flatFleet(s.x - 1)(s.y - 1).nonEmpty) ShotResult.HIT else ShotResult.MISS))) // FIXME
   }
 
 

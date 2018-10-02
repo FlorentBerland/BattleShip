@@ -29,19 +29,19 @@ class HumanPlayer extends Actor{
   }
 
   private def onGameBegins(msg: GameBegins): Unit = {
-    _ui.displayGame(msg.fleet, msg.shotGrid)
+    _ui.displayGame(msg.nextActor, msg.fleet, msg.shotGrid)
   }
 
   private def onNotifyCanPlay(msg: NotifyCanPlay): Unit = {
-
+    _ui.notifiedToPlay(msg.nextActor, msg.shotGrid)
   }
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
-
+    _ui.notifiedLastRoundResult(msg.shotGrid, msg.result)
   }
 
   private def onNotifyHasBeenShot(msg: NotifyHasBeenShot): Unit = {
-
+    _ui.notifiedHasBeenShot(msg.fleet)
   }
 
   private def onGameOver(msg: GameOver): Unit = {

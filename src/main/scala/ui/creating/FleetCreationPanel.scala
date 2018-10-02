@@ -1,9 +1,10 @@
-package ui
+package ui.creating
 
-import java.awt.{Color, Dimension, Graphics, Point}
 import java.awt.event.{MouseEvent, MouseListener, MouseMotionListener}
+import java.awt.{Color, Dimension, Graphics, Point}
 
 import core.model.{FleetGrid, GenericShip, Ship}
+import ui.DisplayFleetPanel
 
 
 /**

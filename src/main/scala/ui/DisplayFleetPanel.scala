@@ -46,13 +46,11 @@ class DisplayFleetPanel(initFleet: FleetGrid,
   def fleet_$eq(fleet: FleetGrid): Unit = {
     _fleet = fleet
     _shipColors = fleet.ships.map(s => (s, computeShipColor(s))).toMap
-    paint(getGraphics)
   }
   def dim: Dimension = _dim
   def dim_$eq(v: Dimension): Unit = {
     _dim = v
     _squareSize = squareSize
-    paint(getGraphics)
   }
   def marginTop: Int = _mTop
   def marginTop_$eq(v: Int): Unit = _mTop = v

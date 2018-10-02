@@ -17,11 +17,11 @@ class ShotGrid(val dim: Dimension, val shotsPerformed: Set[(Point, ShotResult.Re
     * (the representation of the opponent's fleet)
     */
   def toHeuristicFleetGrid: FleetGrid = {
-    FleetGrid(dim, shotsPerformed.map(shot => {
+    FleetGrid(dim, shotsPerformed.flatMap(shot => {
       if(shot._2 >= ShotResult.HIT)
         Some(Ship(Set((shot._1, false))))
       else None
-    }).map(_.get), shotsPerformed.map(_._1))
+    }), shotsPerformed.map(_._1))
   }
 
 }

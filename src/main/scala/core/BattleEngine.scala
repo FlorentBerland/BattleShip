@@ -23,15 +23,15 @@ class BattleEngine extends Actor {
 
 
   private var _battleState: BattleState = _
-  private var _parent: ActorRef = _
+  //private val _parent: ActorRef = _
 
 
   private def onStartGame(msg: StartGame): Unit = {
     println("onStartGame")
     _battleState = BattleState(msg.firstPlayer, msg.otherPlayer)
-    _battleState.nextTurn._1 ! new GameBegins(_battleState.nextTurn._2, _battleState.targetedTurn._2.toShotGrid)
-    _battleState.targetedTurn._1 ! new GameBegins(_battleState.targetedTurn._2, _battleState.nextTurn._2.toShotGrid)
-    //_battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toShotGrid)
+    _battleState.nextTurn._1 ! new GameBegins(self, _battleState.nextTurn._2, _battleState.targetedTurn._2.toShotGrid)
+    _battleState.targetedTurn._1 ! new GameBegins(self, _battleState.targetedTurn._2, _battleState.nextTurn._2.toShotGrid)
+    _battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toShotGrid)
   }
 
   private def onPlay(msg: Play): Unit = { // TODO: Refactor again

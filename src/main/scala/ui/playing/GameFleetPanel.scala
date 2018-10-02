@@ -1,32 +1,48 @@
-package ui
+package ui.playing
 
 import java.awt.event.{MouseEvent, MouseListener, MouseMotionListener}
-import java.awt.{Color, Dimension, Graphics}
+import java.awt.{Color, Dimension, Graphics, Point}
 
-import core.model.FleetGrid
+import akka.actor.ActorRef
+import core.messages.Play
+import core.model.ShotGrid
+import ui.DisplayFleetPanel
 
 
 /**
   * Manages the display of the user's fleet during the game
   *
-  * @param initFleet The fleet to display
+  * @param initShotGrid The fleet to display
   * @param dimensions The size of the grid
   * @param mTop The top margin
   * @param mBottom The bottom margin
   * @param mLeft The left margin
   * @param mRight The right margin
   */
-class GameFleetPanel(initFleet: FleetGrid,
-                         dimensions: Dimension,
-                         mTop: Int,
-                         mBottom: Int,
-                         mLeft: Int,
-                         mRight: Int
-                        ) extends DisplayFleetPanel(initFleet, dimensions, mTop, mBottom, mLeft, mRight)
+class GameFleetPanel(initShotGrid: ShotGrid,
+                     dimensions: Dimension,
+                     mTop: Int,
+                     mBottom: Int,
+                     mLeft: Int,
+                     mRight: Int,
+                     player: ActorRef,
+                     nextActor: ActorRef
+                        ) extends DisplayFleetPanel(initShotGrid.toHeuristicFleetGrid, dimensions, mTop, mBottom, mLeft, mRight)
   with MouseListener with MouseMotionListener
 {
 
+  private var _shotGrid: ShotGrid = initShotGrid
+  private var _nextActor: ActorRef = nextActor
+
   init()
+
+  def shotGrid: ShotGrid = _shotGrid
+  def shotGrid_$eq(sg: ShotGrid): Unit = {
+    _shotGrid = sg
+    fleet = _shotGrid.toHeuristicFleetGrid
+  }
+  def cbActor: ActorRef = _nextActor
+  def cbActor_$eq(cbA: ActorRef): Unit = _nextActor = cbA
 
   private def init(): Unit = {
     this.addMouseMotionListener(this)
@@ -48,7 +64,7 @@ class GameFleetPanel(initFleet: FleetGrid,
   override def mouseClicked(e: MouseEvent): Unit = {
     e.getButton match {
       case 1 => // Left click
-      case 3 => // Right click
+        squareCursor(getMousePosition).foreach(point => cbActor ! new Play(player, new Point(point.x+1, point.y+1)))
       case _ =>
     }
   }
