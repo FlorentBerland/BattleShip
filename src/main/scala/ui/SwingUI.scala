@@ -61,8 +61,7 @@ class SwingUI(val player: ActorRef) extends JFrame {
     this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
     this.setVisible(true)
     refresh(new JPanel())
-    this.setLocation(new Point((Toolkit.getDefaultToolkit.getScreenSize.width-this.getWidth)/2,
-      (Toolkit.getDefaultToolkit.getScreenSize.height-this.getHeight)/2))
+    center()
     this.requestFocus()
   }
 
@@ -71,6 +70,12 @@ class SwingUI(val player: ActorRef) extends JFrame {
     _currentDisplayedComponent = comp
     add(_currentDisplayedComponent)
     this.pack()
+    center()
+  }
+
+  private def center(): Unit = {
+    this.setLocation(new Point((Toolkit.getDefaultToolkit.getScreenSize.width-this.getWidth)/2,
+      (Toolkit.getDefaultToolkit.getScreenSize.height-this.getHeight)/2))
   }
 
 }
