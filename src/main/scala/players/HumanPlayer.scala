@@ -4,6 +4,10 @@ import akka.actor.Actor
 import core.messages._
 import ui.SwingUI
 
+
+/**
+  * A human player, using a Swing GUI. The player is asked to choose his opponent before playing the game
+  */
 class HumanPlayer extends Actor{
 
   override def receive: Receive = {

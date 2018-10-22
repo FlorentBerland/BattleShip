@@ -2,6 +2,8 @@ package util
 
 import core.model.{FleetGrid, Ship, ShotGrid, ShotResult}
 
+import scala.reflect.ClassTag
+
 /**
   * This object provides functions to help for advanced fleet operations
   */
@@ -16,6 +18,20 @@ object FleetHelper {
   def flatten(fleetGrid: FleetGrid): Array[Array[Option[Ship]]] = {
     val matrix: Array[Array[Option[Ship]]] = Array.fill(fleetGrid.dim.width)(Array.fill(fleetGrid.dim.height)(None))
     fleetGrid.ships.foreach(ship => ship.squares.foreach(square => {matrix(square._1.x - 1)(square._1.y - 1) = Some(ship)}))
+    matrix
+  }
+
+
+  /**
+    * Transform the shot grid model to a boolean matrix with true for the squares shot and false for the others
+    *
+    * @param shotGrid The grid to flatten
+    * @return A boolean matrix of the shots
+    */
+  def flattenShotMap(shotGrid: ShotGrid): Array[Array[Boolean]] = {
+    val matrix: Array[Array[Boolean]] =
+      Array.fill(shotGrid.dim.width)(Array.fill(shotGrid.dim.height)(false))
+    shotGrid.shotsPerformed.foreach(sp => matrix(sp.x - 1)(sp.y - 1) = true)
     matrix
   }
 

@@ -2,7 +2,7 @@ package core
 
 import akka.actor.{Actor, Props}
 import core.messages._
-import players.{HumanPlayer, WeakAIPlayer}
+import players.{HumanPlayer, MediumAIPlayer, StrongAIPlayer, WeakAIPlayer}
 import util.DefaultGameConfig
 
 import scala.concurrent.ExecutionContext
@@ -33,6 +33,8 @@ class GameConfigManager extends Actor {
     context.actorOf(msg.opponent match {
       case "HumanPlayer" => Props[HumanPlayer]
       case "WeakAIPlayer" => Props[WeakAIPlayer]
+      case "MediumAIPlayer" => Props[MediumAIPlayer]
+      case "StrongAIPlayer" => Props[StrongAIPlayer]
       case _ => Props[WeakAIPlayer]
     }) ! new CreateFleet(fleetManager, DefaultGameConfig.dimensions, DefaultGameConfig.ships)
     msg.nextActor ! new CreateFleet(fleetManager, DefaultGameConfig.dimensions, DefaultGameConfig.ships)
