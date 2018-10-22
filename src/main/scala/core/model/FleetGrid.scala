@@ -54,12 +54,18 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
 
 
   /**
-    * Convert the instance into a grid to be sent to the opponent
+    * Keep only the information the opponent should know about the fleet
     */
-  def toShotGrid: ShotGrid = {
-    val flatFleet = FleetHelper.flatten(this)
-    ShotGrid(dim, shotsReceived.map(s =>
-      (s, if (flatFleet(s.x - 1)(s.y - 1).nonEmpty) ShotResult.HIT else ShotResult.MISS))) // FIXME
+  def toOpponentGrid: ShotGrid = {
+    ShotGrid(dim, ships.flatMap(ship => {
+      if(ship.isDestroyed){
+        // If the ship is destroyed, all its squares are revealed
+        Set(ship)
+      } else {
+        // Otherwise, each square hit become a single ship (to hide the whole position info)
+        ship.squares.flatMap(square => if(!square._2) Some(Ship(Set(square))) else None)
+      }
+    }), shotsReceived)
   }
 
 
@@ -178,6 +184,7 @@ object FleetGrid {
     fleet
   }
 
+  // TODO : Delete it
   def printArray[T](array: Array[Array[T]]): Unit = {
     array.transpose.toList.foreach(row => { row.foreach(a => print(a + "\t")); println() })
   }

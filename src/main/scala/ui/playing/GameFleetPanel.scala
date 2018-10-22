@@ -5,7 +5,7 @@ import java.awt.{Color, Dimension, Graphics, Point}
 
 import akka.actor.ActorRef
 import core.messages.Play
-import core.model.ShotGrid
+import core.model.{FleetGrid, ShotGrid}
 import ui.DisplayFleetPanel
 
 
@@ -27,7 +27,7 @@ class GameFleetPanel(initShotGrid: ShotGrid,
                      mRight: Int,
                      player: ActorRef,
                      nextActor: ActorRef
-                        ) extends DisplayFleetPanel(initShotGrid.toHeuristicFleetGrid, dimensions, mTop, mBottom, mLeft, mRight)
+                        ) extends DisplayFleetPanel(initShotGrid.toFleetGrid, dimensions, mTop, mBottom, mLeft, mRight)
   with MouseListener with MouseMotionListener
 {
 
@@ -39,7 +39,7 @@ class GameFleetPanel(initShotGrid: ShotGrid,
   def shotGrid: ShotGrid = _shotGrid
   def shotGrid_$eq(sg: ShotGrid): Unit = {
     _shotGrid = sg
-    fleet = _shotGrid.toHeuristicFleetGrid
+    fleet = _shotGrid.toFleetGrid
   }
   def cbActor: ActorRef = _nextActor
   def cbActor_$eq(cbA: ActorRef): Unit = _nextActor = cbA

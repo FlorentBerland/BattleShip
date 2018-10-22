@@ -15,19 +15,7 @@ object FleetHelper {
     */
   def flatten(fleetGrid: FleetGrid): Array[Array[Option[Ship]]] = {
     val matrix: Array[Array[Option[Ship]]] = Array.fill(fleetGrid.dim.width)(Array.fill(fleetGrid.dim.height)(None))
-    fleetGrid.ships.map(ship => ship.squares.map(square => {matrix(square._1.x - 1)(square._1.y - 1) = Some(ship)}))
-    matrix
-  }
-
-  /**
-    * Transform the set of ships model to a matrix containing results to the shots performed
-    *
-    * @param shotGrid The fleet to flatten
-    * @return A flat version of the fleet
-    */
-  def flatten(shotGrid: ShotGrid): Array[Array[Option[ShotResult.Value]]] = {
-    val matrix: Array[Array[Option[ShotResult.Value]]] = Array.fill(shotGrid.dim.width)(Array.fill(shotGrid.dim.height)(None))
-    shotGrid.shotsPerformed.foreach(shot =>  matrix(shot._1.x - 1)(shot._1.y - 1) = Some(shot._2))
+    fleetGrid.ships.foreach(ship => ship.squares.foreach(square => {matrix(square._1.x - 1)(square._1.y - 1) = Some(ship)}))
     matrix
   }
 

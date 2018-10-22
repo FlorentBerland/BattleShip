@@ -7,26 +7,20 @@ import java.awt.{Dimension, Point}
   * the player should know about his opponent's grid
   *
   * @param dim The dimensions of the grid
-  * @param shotsPerformed All the shots by the grid owner
+  * @param shipsFound The ships, fully or partially revealed during the game
+  * @param shotsPerformed The shots performed by the player
   */
-class ShotGrid(val dim: Dimension, val shotsPerformed: Set[(Point, ShotResult.Result)]){
+class ShotGrid(val dim: Dimension, val shipsFound: Set[Ship], val shotsPerformed: Set[Point]){
 
 
   /**
-    * Transform this grind into a heuristic fleet grid
-    * (the representation of the opponent's fleet)
+    * Transform this grid into a FleetGrid for the display
     */
-  def toHeuristicFleetGrid: FleetGrid = {
-    FleetGrid(dim, shotsPerformed.flatMap(shot => {
-      if(shot._2 >= ShotResult.HIT)
-        Some(Ship(Set((shot._1, false))))
-      else None
-    }), shotsPerformed.map(_._1))
-  }
+  def toFleetGrid: FleetGrid = FleetGrid(dim, shipsFound, shotsPerformed)
 
 }
 
 object ShotGrid {
-  def apply(dim: Dimension, shotsPerformed: Set[(Point, ShotResult.Result)]): ShotGrid =
-    new ShotGrid(dim, shotsPerformed)
+  def apply(dim: Dimension, shipsFound: Set[Ship], shotsPerformed: Set[Point]): ShotGrid =
+    new ShotGrid(dim, shipsFound, shotsPerformed)
 }

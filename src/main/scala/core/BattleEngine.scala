@@ -29,9 +29,9 @@ class BattleEngine extends Actor {
   private def onStartGame(msg: StartGame): Unit = {
     println("onStartGame")
     _battleState = BattleState(msg.firstPlayer, msg.otherPlayer)
-    _battleState.nextTurn._1 ! new GameBegins(self, _battleState.nextTurn._2, _battleState.targetedTurn._2.toShotGrid)
-    _battleState.targetedTurn._1 ! new GameBegins(self, _battleState.targetedTurn._2, _battleState.nextTurn._2.toShotGrid)
-    _battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toShotGrid)
+    _battleState.nextTurn._1 ! new GameBegins(self, _battleState.nextTurn._2, _battleState.targetedTurn._2.toOpponentGrid)
+    _battleState.targetedTurn._1 ! new GameBegins(self, _battleState.targetedTurn._2, _battleState.nextTurn._2.toOpponentGrid)
+    _battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toOpponentGrid)
   }
 
   private def onPlay(msg: Play): Unit = { // TODO: Refactor again
@@ -40,7 +40,7 @@ class BattleEngine extends Actor {
     if(_battleState.isNextPlayer(msg.sender)){
       val result: (FleetGrid, Try[ShotResult.Result]) = _battleState.targetedTurn._2.shot(coords)
       // The nextActor receives the result (whether succeeded or failed)
-      msg.sender ! new LastRoundResult(self, result._2.map(r => (coords, r)), result._1.toShotGrid)
+      msg.sender ! new LastRoundResult(self, result._2.map(r => (coords, r)), result._1.toOpponentGrid)
       result._2.map(r => {
         _battleState.targetedTurn._1 ! new NotifyHasBeenShot(coords, result._1)
 
@@ -51,14 +51,14 @@ class BattleEngine extends Actor {
         } else {
           // Update the game state and give the turn to the next player
           _battleState = BattleState((_battleState.targetedTurn._1, result._1), _battleState.nextTurn)
-          _battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toShotGrid)
+          _battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toOpponentGrid)
         }
       })
     } else {
       msg.sender ! new LastRoundResult(
         self,
         Failure(new IllegalStateException("This is not your turn!")),
-        _battleState.targetedTurn._2.toShotGrid)
+        _battleState.targetedTurn._2.toOpponentGrid)
     }
   }
 }
