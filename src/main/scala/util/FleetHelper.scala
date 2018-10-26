@@ -1,8 +1,8 @@
 package util
 
-import core.model.{FleetGrid, Ship, ShotGrid, ShotResult}
+import core.model._
 
-import scala.reflect.ClassTag
+import scala.annotation.tailrec
 
 /**
   * This object provides functions to help for advanced fleet operations
@@ -17,9 +17,18 @@ object FleetHelper {
     */
   def flatten(fleetGrid: FleetGrid): Array[Array[Option[Ship]]] = {
     val matrix: Array[Array[Option[Ship]]] = Array.fill(fleetGrid.dim.width)(Array.fill(fleetGrid.dim.height)(None))
-    fleetGrid.ships.foreach(ship => ship.squares.foreach(square => {matrix(square._1.x - 1)(square._1.y - 1) = Some(ship)}))
+    fleetGrid.ships.foreach(ship => ship.squares.foreach(square => {matrix(square._1.x)(square._1.y) = Some(ship)}))
     matrix
   }
+
+
+  /**
+    * Transform the set of ships model to a matrix containing references to the ships on every square
+    *
+    * @param shotGrid The grid to flatten
+    * @return A flat version of the ships squares hit
+    */
+  def flatten(shotGrid: ShotGrid): Array[Array[Option[Ship]]] = flatten(shotGrid.toFleetGrid)
 
 
   /**
@@ -31,8 +40,27 @@ object FleetHelper {
   def flattenShotMap(shotGrid: ShotGrid): Array[Array[Boolean]] = {
     val matrix: Array[Array[Boolean]] =
       Array.fill(shotGrid.dim.width)(Array.fill(shotGrid.dim.height)(false))
-    shotGrid.shotsPerformed.foreach(sp => matrix(sp.x - 1)(sp.y - 1) = true)
+    shotGrid.shotsPerformed.foreach(sp => matrix(sp.x)(sp.y) = true)
     matrix
+  }
+
+
+  /**
+    * Returns the ships alive in a shot grid from an real composition to help aiming at the fleet
+    *
+    * @param composition The real composition of the fleet
+    * @param shotGrid The grid from where to retrieve the ships
+    * @return The ships not sunk based on the real composition
+    */
+  @tailrec
+  def notSunkShips(composition: Set[GenericShip], shotGrid: ShotGrid): Set[GenericShip] = {
+    if(shotGrid.shipsFound.isEmpty) composition
+    else composition.find(_.size == shotGrid.shipsFound.head.squares.size) match {
+      case Some(genShipDestroyed) => // The head ship was in the composition, its removed from it
+        notSunkShips(composition - genShipDestroyed, ShotGrid(shotGrid.dim, shotGrid.shipsFound.tail, shotGrid.shotsPerformed))
+      case None => // The head ship in the shot grid was not in the composition, so its only partially destroyed
+        notSunkShips(composition, ShotGrid(shotGrid.dim, shotGrid.shipsFound.tail, shotGrid.shotsPerformed))
+    }
   }
 
 
@@ -43,6 +71,7 @@ object FleetHelper {
     * @param matrix A matrix of booleans
     * @param predicate A matcher for the values
     * @return A matrix of longest sequences of true values found
+    * @example [[ false, true, true, false, false, true, true, true]] -> [[0, 2, 1, 0, 0, 3, 2, 1]]
     */
   def longestVerticalSequence[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
 
@@ -80,13 +109,13 @@ object FleetHelper {
     * @return A matrix of taxicab distances, 0 for the values that satisfied the predicate
     */
   def distanceToNearestObstacle[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
-    val computingDistances: Array[Array[Option[Int]]] = matrix.map(_.map(t => if(predicate(t))Some(0) else None))
+    val computingDistances: Array[Array[Option[Int]]] = matrix.map(_.map(t => if(predicate(t)) Some(0) else None))
 
     // In the worst case, the distances have to be computed the number of (biggest dimensions) times - 1
     (0 until (matrix.length max matrix.map(_.length).max)).foreach(_ => {
       matrix.indices.foreach(i => {
         matrix(i).indices.foreach(j => {
-          matrix(i)(j) match {
+          computingDistances(i)(j) match {
             case None => // Needs to be computed: the value is the min of the neighbor values + 1
               val top: Option[Int] = if (i - 1 >= 0) computingDistances(i - 1)(j) else None
               val bottom: Option[Int] = if (i + 1 < matrix.length) computingDistances(i + 1)(j) else None
@@ -105,7 +134,13 @@ object FleetHelper {
       else Some(a.get min b.get)
     }
 
-    computingDistances.map(_.map(_.getOrElse(-1)))
+    computingDistances.map(_.map(_.getOrElse(0)))
+  }
+
+  // TODO : Delete it
+  def printArray[T](array: Array[Array[T]]): Unit = {
+    array.transpose.toList.foreach(row => { row.foreach(a => print(a + "\t")); println() })
+    println()
   }
 
 }

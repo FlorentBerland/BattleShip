@@ -58,7 +58,7 @@ class FleetCreationPanel(initFleet: FleetGrid,
     squareCursor(this.getMousePosition).foreach(fillSquare(g, _, Color.gray))
 
     computeShip(_shipDragged, _isHorizontal, squareCursor(this.getMousePosition)).
-      foreach(_.squares.foreach(sq => fillSquare(getGraphics, new Point(sq._1.x - 1, sq._1.y - 1), Color.blue)))
+      foreach(_.squares.foreach(sq => fillSquare(getGraphics, new Point(sq._1.x, sq._1.y), Color.blue)))
 
     g.setColor(Color.white)
     g.fillRect(dim.width + marginLeft + 1, 0, 200, dim.height + marginTop + 200)
@@ -73,9 +73,9 @@ class FleetCreationPanel(initFleet: FleetGrid,
   private def computeShip(genShip: Option[GenericShip], isHorizontal: Option[Boolean], cursorPos: Option[Point]): Option[Ship] = {
     genShip.flatMap(ship => cursorPos.map(pos => {
       if(isHorizontal.getOrElse(true))
-        Ship((pos.x until pos.x + ship.size).map(i => (new Point(i + 1, pos.y + 1), true)).toSet)
+        Ship((pos.x until pos.x + ship.size).map(i => (new Point(i, pos.y), true)).toSet)
       else
-        Ship((pos.y until pos.y + ship.size).map(i => (new Point(pos.x + 1, i + 1), true)).toSet)
+        Ship((pos.y until pos.y + ship.size).map(i => (new Point(pos.x, i), true)).toSet)
     }))
   }
 

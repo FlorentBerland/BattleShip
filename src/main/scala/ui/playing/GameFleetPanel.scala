@@ -64,7 +64,7 @@ class GameFleetPanel(initShotGrid: ShotGrid,
   override def mouseClicked(e: MouseEvent): Unit = {
     e.getButton match {
       case 1 => // Left click
-        squareCursor(getMousePosition).foreach(point => cbActor ! new Play(player, new Point(point.x+1, point.y+1)))
+        squareCursor(getMousePosition).foreach(point => cbActor ! new Play(player, new Point(point.x, point.y)))
       case _ =>
     }
   }

@@ -70,7 +70,7 @@ class DisplayFleetPanel(initFleet: FleetGrid,
       flat(i).indices.foreach(j => {
         flat(i)(j) match {
           case Some(ship) =>
-            ship.squares.foreach(square => fillSquare(g, new Point(square._1.x - 1, square._1.y - 1), _shipColors(ship)))
+            ship.squares.foreach(square => fillSquare(g, new Point(square._1.x, square._1.y), _shipColors(ship)))
           case None =>
             g.setColor(Color.white)
             g.fillRect(i*_squareSize.width + marginLeft, j*_squareSize.height + marginTop,
@@ -84,8 +84,8 @@ class DisplayFleetPanel(initFleet: FleetGrid,
 
     g.setColor(Color.black)
     fleet.shotsReceived.foreach(shot => {
-      val left = (shot.x - 1)*_squareSize.width + marginLeft
-      val top = (shot.y - 1)*_squareSize.height + marginTop
+      val left = shot.x*_squareSize.width + marginLeft
+      val top = shot.y*_squareSize.height + marginTop
       val right = left + _squareSize.width
       val bottom = top + _squareSize.height
       g.drawLine(left, top, right, bottom)

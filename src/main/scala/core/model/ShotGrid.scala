@@ -4,7 +4,9 @@ import java.awt.{Dimension, Point}
 
 /**
   * This class represent the grid to play. It only contains the information
-  * the player should know about his opponent's grid
+  * the player should know about his opponent's grid. This is the same model as
+  * the FleetGrid but they are non-related types to avoid mistakes in the data sent
+  * to the different players.
   *
   * @param dim The dimensions of the grid
   * @param shipsFound The ships, fully or partially revealed during the game

@@ -48,9 +48,9 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     * @return True if the shot can be performed
     */
   def canShot(coordinates: Point): Boolean =
-    coordinates.x > 0 && coordinates.y > 0 &&
-    coordinates.x <= dim.width && coordinates.y <= dim.height &&
-    shotsReceived.forall(square => square.x != coordinates.x || square.y != coordinates.y)
+    coordinates.x >= 0 && coordinates.y >= 0 &&
+    coordinates.x < dim.width && coordinates.y < dim.height &&
+    shotsReceived.forall(square => !square.equals(coordinates))
 
 
   /**
@@ -85,7 +85,7 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     */
   def isValid: Boolean = {
     // Every ship has to be in the grid:
-    if(!ships.forall(_.squares.forall(s => s._1.x > 0 && s._1.y > 0 && s._1.x <= dim.width && s._1.y <= dim.height)))
+    if(!ships.forall(_.squares.forall(s => s._1.x >= 0 && s._1.y >= 0 && s._1.x < dim.width && s._1.y < dim.height)))
       return false
 
     // The ships has to be aligned horizontally or vertically and in one part:
@@ -102,7 +102,7 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
 
     // The ships should not overlap each other:
     val flatFleet = FleetHelper.flatten(this)
-    if(!ships.forall(ship => ship.squares.forall(square => flatFleet(square._1.x-1)(square._1.y-1).contains(ship))))
+    if(!ships.forall(ship => ship.squares.forall(square => flatFleet(square._1.x)(square._1.y).contains(ship))))
       return false
 
     true
@@ -141,11 +141,11 @@ object FleetGrid {
     val firstShip: Ship = Rand.r.nextInt(2) match {
       case 0 => // Horizontal
         val firstPoint =
-          new Point(Rand.r.nextInt(dim.width - expectedShips.head.size) + 1, Rand.r.nextInt(dim.height) + 1)
+          new Point(Rand.r.nextInt(dim.width - expectedShips.head.size), Rand.r.nextInt(dim.height))
         Ship((0 until expectedShips.head.size).map(i => (new Point(i + firstPoint.x, firstPoint.y), true)).toSet)
       case 1 => // Vertical
         val firstPoint =
-          new Point(Rand.r.nextInt(dim.width) + 1, Rand.r.nextInt(dim.height - expectedShips.head.size) + 1)
+          new Point(Rand.r.nextInt(dim.width), Rand.r.nextInt(dim.height - expectedShips.head.size))
         Ship((0 until expectedShips.head.size).map(i => (new Point(firstPoint.x, i + firstPoint.y), true)).toSet)
     }
     fleet = FleetGrid(dim, Set(firstShip), Set.empty)
@@ -170,10 +170,10 @@ object FleetGrid {
       // Now, find the middle of this empty seq to center the ship on it
       // Ideal value is middle of the sequence - (ship size / 2)
       val newShip: Ship = if(isHorizontal){
-        val firstPoint = new Point(x + longestSeq/2 - ship.size/2 + 1, y + 1)
+        val firstPoint = new Point(x + longestSeq/2 - ship.size/2, y)
         Ship((0 until ship.size).map(i => (new Point(firstPoint.x + i, firstPoint.y), true)).toSet)
       } else {
-        val firstPoint = new Point(x + 1, y + longestSeq/2 - ship.size/2 + 1)
+        val firstPoint = new Point(x, y + longestSeq/2 - ship.size/2)
         Ship((0 until ship.size).map(i => (new Point(firstPoint.x, firstPoint.y + i), true)).toSet)
       }
 
@@ -184,9 +184,5 @@ object FleetGrid {
     fleet
   }
 
-  // TODO : Delete it
-  def printArray[T](array: Array[Array[T]]): Unit = {
-    array.transpose.toList.foreach(row => { row.foreach(a => print(a + "\t")); println() })
-  }
 }
 
