@@ -133,13 +133,21 @@ class DisplayFleetPanel(initFleet: FleetGrid,
     * Compute a pseudo-random color for a ship
     *
     * @param s The ship to color
-    * @return A color based on the ship hash code
+    * @return A color based on the ship hash code or black and white if the ship is sunk
     */
   protected def computeShipColor(s: Ship): Color = {
     // The color of an instance should not change
     // If it was a pure random, the color would change on every refresh, causing ships to blink
     val _random = new Random(s.hashCode())
-    new Color(_random.nextInt(192), _random.nextInt(192), _random.nextInt(192))
+    val R = _random.nextInt(192)
+    val G = _random.nextInt(192)
+    val B = _random.nextInt(192)
+    if(!s.isDestroyed)
+      new Color(R, G, B)
+    else {
+      val average = (R + G + B) / 3
+      new Color(average, average, average)
+    }
   }
 
 

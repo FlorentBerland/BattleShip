@@ -15,15 +15,17 @@ class Ship(val squares: Set[(Point, Boolean)]) {
     * Return a ship with the shot applied on the current instance
     *
     * @param coordinates The coordinates of the shot
-    * @return A ship with the hit result on it. The ship structure is not modified if the shot misses the squares
+    * @return A ship with the hit result on it.
     */
   def shot(coordinates: Point): Ship =
-    Ship(squares.map(square => {
-      if(square._1.equals(coordinates))
-        (square._1, false)
-      else
-        square
-    }))
+    if(squares.exists(s => s._1.equals(coordinates) && s._2)){
+      Ship(squares.map(square => {
+        if(square._1.equals(coordinates))
+          (square._1, false)
+        else
+          square
+      }))
+    } else this
 
 
   /**

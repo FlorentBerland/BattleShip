@@ -106,23 +106,24 @@ object FleetHelper {
     *
     * @param matrix The matrix of values to evaluate
     * @param predicate The filter
-    * @return A matrix of taxicab distances, 0 for the values that satisfied the predicate
+    * @return A matrix of taxicab distances, 0 for the values that satisfied the predicate or a matrix or 0 if
+    *         none satisfied the predicate
     */
   def distanceToNearestObstacle[T](matrix: Array[Array[T]], predicate: T => Boolean): Array[Array[Int]] = {
     val computingDistances: Array[Array[Option[Int]]] = matrix.map(_.map(t => if(predicate(t)) Some(0) else None))
 
-    // In the worst case, the distances have to be computed the number of (biggest dimensions) times - 1
-    (0 until (matrix.length max matrix.map(_.length).max)).foreach(_ => {
-      matrix.indices.foreach(i => {
-        matrix(i).indices.foreach(j => {
+    // In the worst case, the distances have to be computed the number of (sum over dimensions-1) times
+    (0 until (computingDistances.length + computingDistances.map(_.length).max - 2)).foreach(_ => {
+      computingDistances.indices.foreach(i => {
+        computingDistances(i).indices.foreach(j => {
           computingDistances(i)(j) match {
-            case None => // Needs to be computed: the value is the min of the neighbor values + 1
+            case Some(0) => // The reference variable, should not be changed
+            case _ => // Needs to be computed: the value is the min of the neighbor values + 1
               val top: Option[Int] = if (i - 1 >= 0) computingDistances(i - 1)(j) else None
               val bottom: Option[Int] = if (i + 1 < matrix.length) computingDistances(i + 1)(j) else None
               val left: Option[Int] = if (j - 1 >= 0) computingDistances(i)(j - 1) else None
               val right: Option[Int] = if (j + 1 < matrix(i).length) computingDistances(i)(j + 1) else None
               computingDistances(i)(j) = min(top, min(bottom, min(left, right))).map(_ + 1)
-            case _ =>
           }
         })
       })
@@ -141,6 +142,21 @@ object FleetHelper {
   def printArray[T](array: Array[Array[T]]): Unit = {
     array.transpose.toList.foreach(row => { row.foreach(a => print(a + "\t")); println() })
     println()
+  }
+
+
+  /**
+    * Returns the max value of a matrix of integers with its indexes
+    *
+    * @param matrix The given matrix
+    * @return The max value, its first and its second index
+    * @example maxValue(Array(Array(1,3,2), Array(4,1,3))) = (4, 1, 0)
+    */
+  def maxValue(matrix: Array[Array[Int]]): (Int, Int, Int) = {
+    val maxVal = matrix.maxBy(_.max).max
+    val x = matrix.indexWhere(_.max == maxVal)
+    val y = matrix(x).indexWhere(_ == maxVal)
+    (maxVal, x, y)
   }
 
 }

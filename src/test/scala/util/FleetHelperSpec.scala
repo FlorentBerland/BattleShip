@@ -55,4 +55,6 @@ class FleetHelperSpec extends FunSuite {
   assert(FleetHelper.distanceToNearestObstacle[Option[Ship]](FleetHelper.flatten(fleet), _.nonEmpty).flatten
     sameElements Array(1, 0, 1, 1, 0, 1, 2, 1, 0))
 
+  assert(FleetHelper.maxValue(Array(Array(1,3,2), Array(4,1,3))) == (4, 1, 0))
+
 }

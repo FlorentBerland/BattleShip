@@ -66,8 +66,11 @@ class StrongAIPlayer extends Actor {
 
     val weights = weightSquaresToAim(filteredHorizontalSequences, filteredVerticalSequences, distancesToNearestShip, distancesToNearestShot)
     val maxWeight = weights.map(_.max).max
+    val toleratedWeight = maxWeight * .75 // If the coordinates are chosen using the maxWeight equality,
+    // patterns appear in the shot coverage strategy. The threshold allows more flexibility so shots are more random
+    // and it is harder to abuse the game with the ships placing strategy.
     val maxWeightOccurrencesCoordinates: List[Point] = weights.indices.flatMap(i => weights(i).indices.map(j => {
-      if(weights(i)(j) == maxWeight) Some(new Point(i, j)) else None
+      if(weights(i)(j) >= toleratedWeight) Some(new Point(i, j)) else None
     })).flatten.toList
 
     // Randomly choose a point among those which equal the maxWeight
@@ -90,6 +93,7 @@ class StrongAIPlayer extends Actor {
         }
       }
 
+    // TODO : Remove this
     println("Horizontal sequences:")
     FleetHelper.printArray(filteredHorizontalSequences)
     println("Vertical sequences:")
@@ -102,7 +106,7 @@ class StrongAIPlayer extends Actor {
     FleetHelper.printArray(weights)
     println("Point selected: " + selectedPoint)
 
-    sender ! new Play(self, new Point(shotCoordinates._1, shotCoordinates._2))
+    sender ! new Play(self, new Point(selectedPoint.x, selectedPoint.y))
 
   }
 
@@ -122,7 +126,7 @@ class StrongAIPlayer extends Actor {
                                  distancesToShots: Array[Array[Int]]): Array[Array[Int]] = {
     distancesToShips.indices.map(i => distancesToShips.indices.map(j => {
       if(vSeq(i)(j) == 0 && hSeq(i)(j) == 0) 0
-      else vSeq(i)(j)*1 + hSeq(i)(j)*1 + distancesToShips(i)(j)*1 + distancesToShots(i)(j)*1
+      else /*vSeq(i)(j)*1 + hSeq(i)(j)*1 +*/ distancesToShips(i)(j)*2 + distancesToShots(i)(j)*1
     }).toArray).toArray
   }
 

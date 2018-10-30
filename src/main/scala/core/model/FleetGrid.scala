@@ -4,7 +4,7 @@ import java.awt.{Dimension, Point}
 
 import util.{FleetHelper, Rand}
 
-import scala.util.{Failure, Random, Success, Try}
+import scala.util.{Failure, Success, Try}
 
 /**
   * The current fleet of a player
@@ -63,7 +63,7 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
         Set(ship)
       } else {
         // Otherwise, each square hit become a single ship (to hide the whole position info)
-        ship.squares.flatMap(square => if(!square._2) Some(Ship(Set(square))) else None)
+        ship.squares.flatMap(square => if(!square._2) Some[Ship](DamagedOpponentShip(Set(square))) else None)
       }
     }), shotsReceived)
   }
@@ -121,8 +121,6 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
 
 object FleetGrid {
 
-  private val _rand = new Random()
-
   def apply(dim: Dimension, ships: Set[Ship], shotsReceived: Set[Point]) = new FleetGrid(dim, ships, shotsReceived)
 
   /**
@@ -162,10 +160,7 @@ object FleetGrid {
           (FleetHelper.longestVerticalSequence[Option[Ship]](flatFleet, _.isEmpty), false)
       }
 
-      val longestSeq: Int = arrayOfLongestSequence.map(_.max).max
-      // x and y are the array coordinates of the longest sequence of empty squares found
-      val x = arrayOfLongestSequence.indexWhere(row => row.max == longestSeq)
-      val y = arrayOfLongestSequence(x).indexWhere(_ == longestSeq)
+      val(longestSeq, x, y) = FleetHelper.maxValue(arrayOfLongestSequence)
 
       // Now, find the middle of this empty seq to center the ship on it
       // Ideal value is middle of the sequence - (ship size / 2)
