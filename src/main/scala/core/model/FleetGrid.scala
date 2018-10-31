@@ -20,7 +20,7 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
     *
     * @param coordinates The coordinates of the shot
     * @return Success with a fleet with the shot applied. Unmodified if the shot miss. Return
-    *         Failure if the shot cannot be performed
+    *         Failure with IllegalArgumentException if the shot cannot be performed
     */
   def shot(coordinates: Point): (FleetGrid, Try[ShotResult.Result]) = {
     if(!canShot(coordinates))

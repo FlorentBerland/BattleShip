@@ -25,8 +25,12 @@ class StrongAIPlayer extends Actor {
     case _ =>
   }
 
-  // AI state:
+  ///// AI state:
+
+  // The initial fleet composition. Used to compute what opponent ships are still alive and then
+  // eliminate impossible ship locations to aim
   var fleetComposition: Set[GenericShip] = _
+
 
   private def onChooseGameConfig(msg: ChooseGameConfig): Unit = {
     msg.nextActor ! new UseGameConfig(self, "MediumAIPlayer")
@@ -43,12 +47,110 @@ class StrongAIPlayer extends Actor {
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
-      case Failure(_) => play(msg.sender, msg.shotGrid)
+      case Failure(ex) => ex match {
+        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid)
+        case _ =>
+      }
       case _ =>
     }
   }
 
+
+  /**
+    * This is almost the same code as the Medium AI but instead of randomly aim when no ship has been found,
+    * the coordinates of the next shot are computed using heuristics on the ships locations
+    */
   private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
+    val flatFleet = FleetHelper.flatten(shotGrid)
+
+    // Get the longest sequences of horizontally and vertically aligned alive ship squares
+    val hAliveSeq = FleetHelper.longestHorizontalSequence[Option[Ship]](flatFleet, !_.getOrElse(Ship()).isDestroyed)
+    val vAliveSeq = FleetHelper.longestVerticalSequence[Option[Ship]](flatFleet, !_.getOrElse(Ship()).isDestroyed)
+
+    // Get the longest sequence of each and theirs coordinates
+    val (hMax, hX, hY) = FleetHelper.maxValue(hAliveSeq)
+    val (vMax, vX, vY) = FleetHelper.maxValue(vAliveSeq)
+
+    val coordinates: Point =
+      if(hMax == vMax && hMax == 0){
+        aimWithNormalShipDistributionHeuristic(shotGrid)
+      } else if(hMax >= vMax){
+        tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
+          tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+            aimWithNormalShipDistributionHeuristic(shotGrid)
+          )
+        )
+      } else {
+        tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+          tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
+            aimWithNormalShipDistributionHeuristic(shotGrid)
+          )
+        )
+      }
+
+    sender ! new Play(self, coordinates)
+  }
+
+
+  /**
+    * Return coordinates of a shot to perform with a given horizontal hit squares alignment
+    *
+    * @param length The length of the alignment
+    * @param x The coordinates of the starting point
+    * @param y The coordinates of the starting point
+    * @param shotGrid The opponent's grid
+    * @return The square to aim, or None if this is not possible (outside the grid or shot already performed)
+    */
+  def tryToShootAtHorizontalAlignment(length: Int, x: Int, y: Int, shotGrid: ShotGrid): Option[Point] = {
+    val shotMap = FleetHelper.flattenShotMap(shotGrid)
+    if(x > 0 && !shotMap(x-1)(y)){
+      // Shoot at the left
+      Some(new Point(x - 1, y))
+    } else if(x < shotGrid.dim.width - 1 && !shotMap(x + length)(y)){
+      // Shoot at the right
+      Some(new Point(x + length, y))
+    } else {
+      // Impossible to shoot at the alignment, there were two vertical ships side by side
+      None
+    }
+  }
+
+  /**
+    * Return coordinates of a shot to perform with a given vertical hit squares alignment
+    *
+    * @param length The length of the alignment
+    * @param x The coordinates of the starting point
+    * @param y The coordinates of the starting point
+    * @param shotGrid The opponent's grid
+    * @return The square to aim, or None if this is not possible (outside the grid or shot already performed)
+    */
+  def tryToShootAtVerticalAlignment(length: Int, x: Int, y: Int, shotGrid: ShotGrid): Option[Point] = {
+    val shotMap = FleetHelper.flattenShotMap(shotGrid)
+    if(y > 0 && !shotMap(x)(y-1)){
+      // Shoot at the top
+      Some(new Point(x, y - 1))
+    } else if(y < shotGrid.dim.height - 1 && !shotMap(x)(y + length)){
+      // Shoot at the bottom
+      Some(new Point(x, y + length))
+    } else {
+      // Impossible to shoot at the alignment, there were two horizontal ships side by side
+      None
+    }
+  }
+
+
+  /**
+    * Find a square to shot taking account of the distances to the sunk ships. In case of a pseudo-random
+    * distribution or a hand-made distribution, ships are rarely placed side by side (or only in a specific
+    * hand-made distribution strategy). It also takes account of the distances between the shots performed
+    * to get a better grid coverage. Finally, it will aim only at the sequences of squares that are large enough
+    * to contain an alive ship.
+    * For needs of simplicity, partially damaged ships are not considered to eliminate improbable
+    * empty squares sequences by length.
+    *
+    * @param shotGrid The opponent's grid
+    */
+  private def aimWithNormalShipDistributionHeuristic(shotGrid: ShotGrid): Point = {
     // Compute the greatest empty sequences of squares not shot and remove the
     // sequences that cannot contain the alive ships
     val aliveShips = FleetHelper.notSunkShips(fleetComposition, shotGrid)
@@ -106,8 +208,8 @@ class StrongAIPlayer extends Actor {
     FleetHelper.printArray(weights)
     println("Point selected: " + selectedPoint)
 
-    sender ! new Play(self, new Point(selectedPoint.x, selectedPoint.y))
-
+    selectedPoint
+    new Point(shotCoordinates._1, shotCoordinates._2)
   }
 
 
@@ -126,7 +228,7 @@ class StrongAIPlayer extends Actor {
                                  distancesToShots: Array[Array[Int]]): Array[Array[Int]] = {
     distancesToShips.indices.map(i => distancesToShips.indices.map(j => {
       if(vSeq(i)(j) == 0 && hSeq(i)(j) == 0) 0
-      else /*vSeq(i)(j)*1 + hSeq(i)(j)*1 +*/ distancesToShips(i)(j)*2 + distancesToShots(i)(j)*1
+      else /*vSeq(i)(j)*1 + hSeq(i)(j)*1 +*/ distancesToShips(i)(j)*1 + distancesToShots(i)(j)*1
     }).toArray).toArray
   }
 

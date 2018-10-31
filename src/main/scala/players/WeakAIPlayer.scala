@@ -39,7 +39,10 @@ class WeakAIPlayer extends Actor {
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
-      case Failure(_) => play(msg.sender, msg.shotGrid)
+      case Failure(ex) => ex match {
+        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid)
+        case _ =>
+      }
       case _ =>
     }
   }

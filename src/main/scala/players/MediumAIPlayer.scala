@@ -19,7 +19,6 @@ class MediumAIPlayer extends Actor {
   override def receive: Receive = {
     case msg: ChooseGameConfig => onChooseGameConfig(msg)
     case msg: CreateFleet => onCreateFleet(msg)
-    case msg: GameBegins => onGameBegins(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
 
@@ -34,17 +33,16 @@ class MediumAIPlayer extends Actor {
     msg.nextActor ! new FleetCreated(self, FleetGrid(msg.dimension, msg.ships))
   }
 
-  private def onGameBegins(msg: GameBegins): Unit = {
-    // TODO: Reset the AI state
-  }
-
   private def onNotifyCanPlay(msg: NotifyCanPlay): Unit = {
     play(msg.nextActor, msg.shotGrid)
   }
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
-      case Failure(_) => play(msg.sender, msg.shotGrid)
+      case Failure(ex) => ex match {
+        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid)
+        case _ =>
+      }
       case _ =>
     }
   }
@@ -61,19 +59,21 @@ class MediumAIPlayer extends Actor {
     val (vMax, vX, vY) = FleetHelper.maxValue(vAliveSeq)
 
     val coordinates: Point =
-    if(hMax >= vMax){
-      tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
-        tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
-          new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
-        )
-      )
-    } else {
-      tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+      if(hMax == vMax && hMax == 0){
+        new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+      } else if(hMax >= vMax){
         tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
-          new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+          tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+            new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+          )
         )
-      )
-    }
+      } else {
+        tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+          tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
+            new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+          )
+        )
+      }
 
     sender ! new Play(self, coordinates)
   }
