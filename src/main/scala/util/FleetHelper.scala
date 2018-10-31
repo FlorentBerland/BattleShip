@@ -146,10 +146,10 @@ object FleetHelper {
 
 
   /**
-    * Returns the max value of a matrix of integers with its indexes
+    * Returns the length value of a matrix of integers with its indexes
     *
     * @param matrix The given matrix
-    * @return The max value, its first and its second index
+    * @return The length value, its first and its second index
     * @example maxValue(Array(Array(1,3,2), Array(4,1,3))) = (4, 1, 0)
     */
   def maxValue(matrix: Array[Array[Int]]): (Int, Int, Int) = {

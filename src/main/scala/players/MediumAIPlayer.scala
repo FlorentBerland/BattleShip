@@ -4,8 +4,8 @@ import java.awt.Point
 
 import akka.actor.{Actor, ActorRef}
 import core.messages._
-import core.model.{FleetGrid, ShotGrid}
-import util.Rand
+import core.model.{FleetGrid, Ship, ShotGrid}
+import util.{FleetHelper, Rand}
 
 import scala.util.Failure
 
@@ -50,8 +50,81 @@ class MediumAIPlayer extends Actor {
   }
 
   private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
-    // FIXME : aim smartly
-    sender ! new Play(self, new Point(Rand.r.nextInt(shotGrid.dim.width + 1), Rand.r.nextInt(shotGrid.dim.height + 1)))
+    val flatFleet = FleetHelper.flatten(shotGrid)
+
+    // Get the longest sequences of horizontally and vertically aligned alive ship squares
+    val hAliveSeq = FleetHelper.longestHorizontalSequence[Option[Ship]](flatFleet, !_.getOrElse(Ship()).isDestroyed)
+    val vAliveSeq = FleetHelper.longestVerticalSequence[Option[Ship]](flatFleet, !_.getOrElse(Ship()).isDestroyed)
+
+    // Get the longest sequence of each and theirs coordinates
+    val (hMax, hX, hY) = FleetHelper.maxValue(hAliveSeq)
+    val (vMax, vX, vY) = FleetHelper.maxValue(vAliveSeq)
+
+    val coordinates: Point =
+    if(hMax >= vMax){
+      tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
+        tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+          new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+        )
+      )
+    } else if(hMax < vMax){
+      tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
+        tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
+          new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+        )
+      )
+    } else {
+      new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
+    }
+
+    sender ! new Play(self, coordinates)
+  }
+
+
+  /**
+    * Return coordinates of a shot to perform with a given horizontal hit squares alignment
+    *
+    * @param length The length of the alignment
+    * @param x The coordinates of the starting point
+    * @param y The coordinates of the starting point
+    * @param shotGrid The opponent's grid
+    * @return The square to aim, or None if this is not possible (outside the grid or shot already performed)
+    */
+  def tryToShootAtHorizontalAlignment(length: Int, x: Int, y: Int, shotGrid: ShotGrid): Option[Point] = {
+    val shotMap = FleetHelper.flattenShotMap(shotGrid)
+    if(x > 0 && !shotMap(x-1)(y)){
+      // Shoot at the left
+      Some(new Point(x - 1, y))
+    } else if(x < shotGrid.dim.width - 1 && !shotMap(x + length)(y)){
+      // Shoot at the right
+      Some(new Point(x + length, y))
+    } else {
+      // Impossible to shoot at the alignment, there were two vertical ships side by side
+      None
+    }
+  }
+
+  /**
+    * Return coordinates of a shot to perform with a given vertical hit squares alignment
+    *
+    * @param length The length of the alignment
+    * @param x The coordinates of the starting point
+    * @param y The coordinates of the starting point
+    * @param shotGrid The opponent's grid
+    * @return The square to aim, or None if this is not possible (outside the grid or shot already performed)
+    */
+  def tryToShootAtVerticalAlignment(length: Int, x: Int, y: Int, shotGrid: ShotGrid): Option[Point] = {
+    val shotMap = FleetHelper.flattenShotMap(shotGrid)
+    if(y > 0 && !shotMap(x)(y-1)){
+      // Shoot at the top
+      Some(new Point(x, y - 1))
+    } else if(y < shotGrid.dim.height - 1 && !shotMap(x)(y + length)){
+      // Shoot at the bottom
+      Some(new Point(x, y + length))
+    } else {
+      // Impossible to shoot at the alignment, there were two horizontal ships side by side
+      None
+    }
   }
 
 }

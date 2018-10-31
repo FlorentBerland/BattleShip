@@ -46,4 +46,5 @@ class Ship(val squares: Set[(Point, Boolean)]) {
 
 object Ship {
   def apply(squares: Set[(Point, Boolean)]): Ship = new Ship(squares)
+  def apply(): Ship = Ship(Set.empty)
 }

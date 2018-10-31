@@ -45,7 +45,7 @@ class WeakAIPlayer extends Actor {
   }
 
   private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
-    sender ! new Play(self, new Point(Rand.r.nextInt(shotGrid.dim.width + 1), Rand.r.nextInt(shotGrid.dim.height + 1)))
+    sender ! new Play(self, new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height)))
   }
 
 }
