@@ -21,6 +21,7 @@ class MediumAIPlayer extends Actor {
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
+    case msg: GameOver => onGameOver(msg)
 
     case _ =>
   }
@@ -46,6 +47,11 @@ class MediumAIPlayer extends Actor {
       case _ =>
     }
   }
+
+  private def onGameOver(msg: GameOver): Unit = {
+    msg.sender ! new Replay(self, true)
+  }
+
 
   private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
     val flatFleet = FleetHelper.flatten(shotGrid)
@@ -90,10 +96,10 @@ class MediumAIPlayer extends Actor {
     */
   def tryToShootAtHorizontalAlignment(length: Int, x: Int, y: Int, shotGrid: ShotGrid): Option[Point] = {
     val shotMap = FleetHelper.flattenShotMap(shotGrid)
-    if(x > 0 && !shotMap(x-1)(y)){
+    if (x > 0 && !shotMap(x - 1)(y)) {
       // Shoot at the left
       Some(new Point(x - 1, y))
-    } else if(x < shotGrid.dim.width - 1 && !shotMap(x + length)(y)){
+    } else if (x + length < shotGrid.dim.width && !shotMap(x + length)(y)) {
       // Shoot at the right
       Some(new Point(x + length, y))
     } else {
@@ -116,7 +122,7 @@ class MediumAIPlayer extends Actor {
     if(y > 0 && !shotMap(x)(y-1)){
       // Shoot at the top
       Some(new Point(x, y - 1))
-    } else if(y < shotGrid.dim.height - 1 && !shotMap(x)(y + length)){
+    } else if(y + length < shotGrid.dim.height && !shotMap(x)(y + length)){
       // Shoot at the bottom
       Some(new Point(x, y + length))
     } else {

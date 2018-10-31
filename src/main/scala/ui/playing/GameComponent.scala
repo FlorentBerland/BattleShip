@@ -17,6 +17,11 @@ class GameComponent(val player: ActorRef, val nextActor: ActorRef, fleetGrid: Fl
     new Dimension(300, 300), 10, 10, 10, 10,
     player, nextActor
   )
+  private val _roundStateDisplay = new JLabel("Play !!!"){ this.setForeground(Color.white) }
+  private val _roundStatePanel = new JPanel(){
+    this.setBackground(new Color(100, 110, 200))
+    this.add(_roundStateDisplay)
+  }
 
   init()
 
@@ -26,12 +31,30 @@ class GameComponent(val player: ActorRef, val nextActor: ActorRef, fleetGrid: Fl
     _opponentFleetPanel.paint(_opponentFleetPanel.getGraphics)
   }
 
-  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[(Point, ShotResult.Value)]): Unit = {
+  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[ShotResult.Value]): Unit = {
     result match {
-      case Success(data) =>
-      case Failure(ex) =>
+      case Success(data) => data match {
+        case ShotResult.MISS =>
+          _roundStateDisplay.setText("Miss")
+          _roundStatePanel.setBackground(Color.gray)
+        case ShotResult.HIT =>
+          _roundStateDisplay.setText("Hit")
+          _roundStatePanel.setBackground(Color.blue)
+        case ShotResult.HIT_AND_SINK =>
+          _roundStateDisplay.setText("Hit and sink !")
+          _roundStatePanel.setBackground(Color.green)
+      }
+      case Failure(ex) => ex match {
+        case _: IllegalArgumentException =>
+          _roundStateDisplay.setText("You can't shot here")
+          _roundStatePanel.setBackground(Color.orange)
+        case _: IllegalStateException =>
+          _roundStateDisplay.setText("This is not your turn !")
+          _roundStatePanel.setBackground(Color.red)
+      }
     }
     _opponentFleetPanel.shotGrid = shotGrid
+    paint(this.getGraphics)
   }
 
   def notifiedHasBeenShot(fleetGrid: FleetGrid): Unit = {
@@ -43,10 +66,7 @@ class GameComponent(val player: ActorRef, val nextActor: ActorRef, fleetGrid: Fl
     this.setLayout(new BorderLayout())
 
     // Header
-    this.add(new JPanel(){
-      this.setBackground(new Color(100, 110, 200))
-      this.add(new JLabel("Play !!!"){ this.setForeground(Color.white) })
-    }, BorderLayout.NORTH)
+    this.add(_roundStatePanel, BorderLayout.NORTH)
 
     // Fleet grid
     this.add(_playerFleetPanel, BorderLayout.WEST)

@@ -4,6 +4,7 @@ import java.awt.{Dimension, Point}
 
 import util.{FleetHelper, Rand}
 
+import scala.annotation.tailrec
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -106,6 +107,28 @@ class FleetGrid(val dim: Dimension, val ships: Set[Ship], val shotsReceived: Set
       return false
 
     true
+  }
+
+
+  /**
+    * Tests whether the fleet abides the initial ship composition and dimensions
+    *
+    * @param expectedShips The generic ships to be placed to compare with the fleet's ships
+    * @param expectedDim The dimensions to compare with the fleet dimensions
+    * @return True if the dimensions are equal and the ships and the expected composition match, false otherwise
+    */
+  def abidesComposition(expectedShips: Set[GenericShip], expectedDim: Dimension): Boolean = {
+
+    @tailrec
+    def abidesShipComposition(expectedShips: Set[GenericShip], ships: Set[Ship]): Boolean = {
+      if(ships.isEmpty) expectedShips.isEmpty
+      else expectedShips.find(_.size == ships.head.squares.size) match {
+        case Some(genericShip) => abidesShipComposition(expectedShips - genericShip, ships.tail)
+        case None => false
+      }
+    }
+
+    expectedDim.equals(this.dim) && abidesShipComposition(expectedShips, this.ships)
   }
 
 

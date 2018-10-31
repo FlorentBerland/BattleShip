@@ -23,27 +23,28 @@ class GameConfigManager extends Actor {
   }
 
   private def onInitGame(msg: InitGame): Unit = {
-    println("onInitGame")
-    context.actorOf(msg.firstPlayerProps) ! new ChooseGameConfig(self)
+    context.actorOf(msg.firstPlayerProps, msg.firstPlayerProps.actorClass().getSimpleName) ! new ChooseGameConfig(self)
   }
 
   private def onUseGameConfig(msg: UseGameConfig): Unit = {
-    println("onUseGameConfig")
+    val ships = DefaultGameConfig.ships
+    val dimensions = DefaultGameConfig.dimensions
+
     val fleetManager = context.actorOf(Props[GameFleetManager], "FleetManager")
+    fleetManager ! new CreateFleet(self, dimensions, ships)
+
     context.actorOf(msg.opponent match {
       case "HumanPlayer" => Props[HumanPlayer]
       case "WeakAIPlayer" => Props[WeakAIPlayer]
       case "MediumAIPlayer" => Props[MediumAIPlayer]
       case "StrongAIPlayer" => Props[StrongAIPlayer]
       case _ => Props[WeakAIPlayer]
-    }) ! new CreateFleet(fleetManager, DefaultGameConfig.dimensions, DefaultGameConfig.ships)
-    msg.nextActor ! new CreateFleet(fleetManager, DefaultGameConfig.dimensions, DefaultGameConfig.ships)
-    //context stop self
+    }, msg.opponent) ! new CreateFleet(fleetManager, dimensions, ships)
+    msg.nextActor ! new CreateFleet(fleetManager, dimensions, ships)
   }
 
 
   private def onQuitGame(msg: QuitGame): Unit = {
-    println("onQuitGame")
     context stop msg.sender
     implicit val executionContext: ExecutionContext = context.system.dispatcher
     context.system.scheduler.scheduleOnce(Duration.Zero)(System.exit(0))

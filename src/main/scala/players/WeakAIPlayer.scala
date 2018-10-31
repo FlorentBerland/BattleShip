@@ -21,6 +21,7 @@ class WeakAIPlayer extends Actor {
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
+    case msg: GameOver => onGameOver(msg)
 
     case _ =>
   }
@@ -49,6 +50,10 @@ class WeakAIPlayer extends Actor {
 
   private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
     sender ! new Play(self, new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height)))
+  }
+
+  private def onGameOver(msg: GameOver): Unit = {
+    msg.sender ! new Replay(self, true)
   }
 
 }

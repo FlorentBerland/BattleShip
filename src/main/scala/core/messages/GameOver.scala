@@ -8,7 +8,7 @@ import core.model.FleetGrid
 /**
   * Notify a player of the end of a game
   *
-  * @param sender The nextActor of the message
+  * @param sender The sender of the message
   * @param end The end of the game
   * @param opponentFleet The final fleet of the opponent
   */

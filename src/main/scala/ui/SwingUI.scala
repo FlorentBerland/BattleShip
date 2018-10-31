@@ -4,11 +4,13 @@ import java.awt._
 import java.awt.event.{MouseEvent, MouseListener}
 
 import akka.actor.ActorRef
+import core.GameEnd
 import core.messages.QuitGame
 import core.model.{FleetGrid, GenericShip, ShotGrid, ShotResult}
 import javax.swing._
 import javax.swing.border.EmptyBorder
 import ui.creating.CreatingComponent
+import ui.ending.GameOverComponent
 import ui.initializing.ChooseOpponentComponent
 import ui.playing.GameComponent
 
@@ -49,12 +51,16 @@ class SwingUI(val player: ActorRef) extends JFrame {
     }
   }
 
-  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[(Point, ShotResult.Value)]): Unit = {
+  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[ShotResult.Value]): Unit = {
     _currentDisplayedComponent match {
       case _gp: GameComponent =>
         _gp.notifiedLastRoundResult(shotGrid, result)
       case _ =>
     }
+  }
+
+  def notifiedGameOver(nextActor: ActorRef, end: GameEnd.End, opponentGrid: FleetGrid): Unit = {
+    this.refresh(new GameOverComponent(player, nextActor, end, opponentGrid))
   }
 
   private def init(): Unit = {

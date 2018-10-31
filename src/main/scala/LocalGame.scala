@@ -1,7 +1,7 @@
 import akka.actor.{ActorSystem, Props}
 import core.GameConfigManager
 import core.messages.InitGame
-import players.HumanPlayer
+import players._
 
 object LocalGame extends App {
 

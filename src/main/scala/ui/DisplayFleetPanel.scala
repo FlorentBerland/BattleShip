@@ -14,7 +14,7 @@ import scala.util.Random
   * have their own accessors and are mutable to improve UI performance
   *
   * @param initFleet The fleet to display
-  * @param dimensions The size of the grid
+  * @param dimensions The size of the grid in pixels
   * @param mTop The top margin
   * @param mBottom The bottom margin
   * @param mLeft The left margin

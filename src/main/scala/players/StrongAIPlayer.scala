@@ -21,6 +21,7 @@ class StrongAIPlayer extends Actor {
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
+    case msg: GameOver => onGameOver(msg)
 
     case _ =>
   }
@@ -53,6 +54,10 @@ class StrongAIPlayer extends Actor {
       }
       case _ =>
     }
+  }
+
+  private def onGameOver(msg: GameOver): Unit = {
+    msg.sender ! new Replay(self, true)
   }
 
 
@@ -103,10 +108,10 @@ class StrongAIPlayer extends Actor {
     */
   def tryToShootAtHorizontalAlignment(length: Int, x: Int, y: Int, shotGrid: ShotGrid): Option[Point] = {
     val shotMap = FleetHelper.flattenShotMap(shotGrid)
-    if(x > 0 && !shotMap(x-1)(y)){
+    if (x > 0 && !shotMap(x - 1)(y)) {
       // Shoot at the left
       Some(new Point(x - 1, y))
-    } else if(x < shotGrid.dim.width - 1 && !shotMap(x + length)(y)){
+    } else if (x + length < shotGrid.dim.width && !shotMap(x + length)(y)) {
       // Shoot at the right
       Some(new Point(x + length, y))
     } else {
@@ -129,7 +134,7 @@ class StrongAIPlayer extends Actor {
     if(y > 0 && !shotMap(x)(y-1)){
       // Shoot at the top
       Some(new Point(x, y - 1))
-    } else if(y < shotGrid.dim.height - 1 && !shotMap(x)(y + length)){
+    } else if(y + length < shotGrid.dim.height && !shotMap(x)(y + length)){
       // Shoot at the bottom
       Some(new Point(x, y + length))
     } else {
@@ -195,20 +200,6 @@ class StrongAIPlayer extends Actor {
         }
       }
 
-    // TODO : Remove this
-    println("Horizontal sequences:")
-    FleetHelper.printArray(filteredHorizontalSequences)
-    println("Vertical sequences:")
-    FleetHelper.printArray(filteredVerticalSequences)
-    println("Distances to ships:")
-    FleetHelper.printArray(distancesToNearestShip)
-    println("Distances to shots:")
-    FleetHelper.printArray(distancesToNearestShot)
-    println("Weights:")
-    FleetHelper.printArray(weights)
-    println("Point selected: " + selectedPoint)
-
-    selectedPoint
     new Point(shotCoordinates._1, shotCoordinates._2)
   }
 

@@ -49,7 +49,7 @@ class HumanPlayer extends Actor{
   }
 
   private def onGameOver(msg: GameOver): Unit = {
-    // TODO
+    _ui.notifiedGameOver(msg.sender, msg.end, msg.opponentFleet)
   }
 
 }
