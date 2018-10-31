@@ -67,14 +67,12 @@ class MediumAIPlayer extends Actor {
           new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
         )
       )
-    } else if(hMax < vMax){
+    } else {
       tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
         tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
           new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
         )
       )
-    } else {
-      new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height))
     }
 
     sender ! new Play(self, coordinates)
