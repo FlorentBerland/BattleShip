@@ -111,8 +111,8 @@ class GameFleetManager extends Actor {
   private def finishActorSystem(): Unit = {
     if(_player1.player != null) context stop _player1.player
     if(_player2.player != null) context stop _player2.player
+    if(_parent != null) context stop _parent
     context stop _gameEngine
-    context stop _parent
     context stop self
     System.exit(0)
   }
