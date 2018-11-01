@@ -3,10 +3,10 @@ import core.GameConfigManager
 import core.messages.InitGame
 import players._
 
-object LocalGame extends App {
+object StrongAIVsMediumAI extends App {
 
   val system = ActorSystem("BattleShip")
   val manager = system.actorOf(Props[GameConfigManager], "ConfigManager")
-  manager ! new InitGame(Props[HumanPlayer])
+  manager ! new InitGame(Props[StrongAIPlayer])
 
 }

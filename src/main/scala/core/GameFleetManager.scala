@@ -21,6 +21,7 @@ class GameFleetManager extends Actor {
 
 
   private val _gameEngine: ActorRef = context.actorOf(Props[BattleEngine])
+  private val _retries = 100
 
   ///// Manager state
 
@@ -85,7 +86,7 @@ class GameFleetManager extends Actor {
       _player2.score + (if(_player2 == msg.winner) "\t(winner)" else ""))
 
     // Stop at 100 games
-    if(_player1.score + _player2.score == 100)
+    if(_player1.score + _player2.score == _retries)
       finishActorSystem()
   }
 

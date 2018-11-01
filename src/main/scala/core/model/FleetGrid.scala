@@ -154,53 +154,56 @@ object FleetGrid {
     * @return A new fleet
     */
   def apply(dim: Dimension, expectedShips: Set[GenericShip]): FleetGrid = {
-    var fleet = new FleetGrid(dim, Set.empty, Set.empty)
-    if(expectedShips.isEmpty)
-      return fleet
 
-    // Randomly place the first ship
-    val firstShip: Ship = Rand.r.nextInt(2) match {
-      case 0 => // Horizontal
-        val firstPoint =
-          new Point(Rand.r.nextInt(dim.width - expectedShips.head.size), Rand.r.nextInt(dim.height))
-        Ship((0 until expectedShips.head.size).map(i => (new Point(i + firstPoint.x, firstPoint.y), true)).toSet)
-      case 1 => // Vertical
-        val firstPoint =
-          new Point(Rand.r.nextInt(dim.width), Rand.r.nextInt(dim.height - expectedShips.head.size))
-        Ship((0 until expectedShips.head.size).map(i => (new Point(firstPoint.x, i + firstPoint.y), true)).toSet)
+    @tailrec
+    def addShip(fleet: FleetGrid, expectedShips: Set[GenericShip]): FleetGrid = {
+      if(expectedShips.isEmpty) fleet
+      else {
+        val flatFleet = FleetHelper.flatten(fleet)
+
+        // Get a matrix of taxicab distances to the nearest ship:
+        val distancesToShips = FleetHelper.distanceToNearestObstacle[Option[Ship]](flatFleet, _.nonEmpty)
+        // Then get the greatest distance:
+        val maxValue = FleetHelper.maxValue(distancesToShips)._1
+        /* Find a threshold to accept squares that do not maximize the greatest distance (this will create a placing
+          more random)
+          The random factor can be set between 0 and 1. 0 means a full random generation and 1 means a generation that
+          maximizes the distance between ships. Greater than 1 may result in an infinite retry loop
+          (the ship cannot be placed)
+         */
+        val randomFactor = .67
+        val threshold = (maxValue - expectedShips.head.size/2) * randomFactor
+
+        // Get all the coordinates that have a distance to the nearest ship greater than the threshold:
+        val coordinatesList: List[Point] = distancesToShips.indices.flatMap(i => distancesToShips(i).indices.map(j =>
+          if(distancesToShips(i)(j) >= threshold) Some(new Point(i, j)) else None
+        )).flatten.toList
+
+        // Choose a random point among the selected ones:
+        val selectedPoint = coordinatesList(Rand.r.nextInt(coordinatesList.size))
+
+        // Choose an orientation for the ship and center it on the selected point:
+        val shipToAdd: Ship =
+          if(Rand.r.nextInt(2) == 0){
+            // Horizontal
+            val firstPoint = new Point(selectedPoint.x - expectedShips.head.size/2, selectedPoint.y)
+            Ship((0 until expectedShips.head.size).map(i => (new Point(firstPoint.x + i, firstPoint.y), true)).toSet)
+          } else {
+            // Vertical
+            val firstPoint = new Point(selectedPoint.x, selectedPoint.y - expectedShips.head.size/2)
+            Ship((0 until expectedShips.head.size).map(i => (new Point(firstPoint.x, firstPoint.y + i), true)).toSet)
+          }
+
+        // Sometimes the chosen location may result in an inconsistent fleet, e.g. the corner of the grid
+        if((fleet + shipToAdd).isValid)
+          addShip(fleet + shipToAdd, expectedShips.tail)
+        else
+          addShip(fleet, expectedShips)
+
+      }
     }
-    fleet = FleetGrid(dim, Set(firstShip), Set.empty)
 
-    // Place the other ships in order to have the best distribution
-    expectedShips.tail.foreach(ship => {
-      val flatFleet = FleetHelper.flatten(fleet)
-
-      // Compute the longest sequences of vertical or horizontal empty square sequences
-      val (arrayOfLongestSequence, isHorizontal) = Rand.r.nextInt(2) match {
-        case 0 =>
-          (FleetHelper.longestHorizontalSequence[Option[Ship]](flatFleet, _.isEmpty), true)
-        case 1 =>
-          (FleetHelper.longestVerticalSequence[Option[Ship]](flatFleet, _.isEmpty), false)
-      }
-
-      val(longestSeq, x, y) = FleetHelper.maxValue(arrayOfLongestSequence)
-
-      // Now, find the middle of this empty seq to center the ship on it
-      // Ideal value is middle of the sequence - (ship size / 2)
-      val newShip: Ship = if(isHorizontal){
-        val firstPoint = new Point(x + longestSeq/2 - ship.size/2, y)
-        Ship((0 until ship.size).map(i => (new Point(firstPoint.x + i, firstPoint.y), true)).toSet)
-      } else {
-        val firstPoint = new Point(x, y + longestSeq/2 - ship.size/2)
-        Ship((0 until ship.size).map(i => (new Point(firstPoint.x, firstPoint.y + i), true)).toSet)
-      }
-
-      // Add it to the fleet
-      fleet = FleetGrid(dim, fleet.ships + newShip, fleet.shotsReceived)
-    })
-
-    fleet
+    addShip(FleetGrid(dim, Set.empty, Set.empty), expectedShips)
   }
-
 }
 
