@@ -31,17 +31,17 @@ class MediumAIPlayer extends Actor {
   }
 
   private def onCreateFleet(msg: CreateFleet): Unit = {
-    msg.nextActor ! new FleetCreated(self, FleetGrid(msg.dimension, msg.ships))
+    msg.nextActor ! new FleetCreated(msg.playerId, FleetGrid(msg.dimension, msg.ships))
   }
 
   private def onNotifyCanPlay(msg: NotifyCanPlay): Unit = {
-    play(msg.nextActor, msg.shotGrid)
+    play(msg.nextActor, msg.shotGrid, msg.playerId)
   }
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
       case Failure(ex) => ex match {
-        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid)
+        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid, msg.playerId)
         case _ =>
       }
       case _ =>
@@ -49,11 +49,11 @@ class MediumAIPlayer extends Actor {
   }
 
   private def onGameOver(msg: GameOver): Unit = {
-    msg.sender ! new Replay(self, true)
+    msg.sender ! new Replay(msg.playerId, true)
   }
 
 
-  private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
+  private def play(sender: ActorRef, shotGrid: ShotGrid, id: String): Unit = {
     val flatFleet = FleetHelper.flatten(shotGrid)
 
     // Get the longest sequences of horizontally and vertically aligned alive ship squares
@@ -81,7 +81,7 @@ class MediumAIPlayer extends Actor {
         )
       }
 
-    sender ! new Play(self, coordinates)
+    sender ! new Play(id, coordinates)
   }
 
 

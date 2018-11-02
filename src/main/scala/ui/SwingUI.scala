@@ -26,12 +26,12 @@ class SwingUI(val player: ActorRef) extends JFrame {
     this.refresh(new ChooseOpponentComponent(player, nextActor))
   }
 
-  def displayCreateFleet(nextActor: ActorRef, dim: Dimension, expectedShips: Set[GenericShip]): Unit = {
-    this.refresh(new CreatingComponent(player, nextActor, dim, expectedShips))
+  def displayCreateFleet(nextActor: ActorRef, dim: Dimension, expectedShips: Set[GenericShip], id: String): Unit = {
+    this.refresh(new CreatingComponent(id, nextActor, dim, expectedShips))
   }
 
-  def displayGame(nextActor: ActorRef, fleetGrid: FleetGrid, shotGrid: ShotGrid): Unit = {
-    this.refresh(new GameComponent(player, nextActor, fleetGrid, shotGrid))
+  def displayGame(nextActor: ActorRef, fleetGrid: FleetGrid, shotGrid: ShotGrid, playerId: String): Unit = {
+    this.refresh(new GameComponent(playerId, nextActor, fleetGrid, shotGrid))
   }
 
   def notifiedHasBeenShot(fleetGrid: FleetGrid): Unit = {
@@ -42,25 +42,25 @@ class SwingUI(val player: ActorRef) extends JFrame {
     }
   }
 
-  def notifiedToPlay(nextActor: ActorRef, shotGrid: ShotGrid): Unit = {
+  def notifiedToPlay(nextActor: ActorRef, shotGrid: ShotGrid, playerId: String): Unit = {
     _currentDisplayedComponent match {
       case _gp: GameComponent =>
-        _gp.notifiedToPlay(nextActor, shotGrid)
+        _gp.notifiedToPlay(nextActor, shotGrid, playerId)
       case _ =>
-        nextActor ! new QuitGame(player)
+        nextActor ! new QuitGame(playerId)
     }
   }
 
-  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[ShotResult.Value]): Unit = {
+  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[ShotResult.Value], id: String): Unit = {
     _currentDisplayedComponent match {
       case _gp: GameComponent =>
-        _gp.notifiedLastRoundResult(shotGrid, result)
+        _gp.notifiedLastRoundResult(shotGrid, result, id)
       case _ =>
     }
   }
 
-  def notifiedGameOver(nextActor: ActorRef, end: GameEnd.End, opponentGrid: FleetGrid): Unit = {
-    this.refresh(new GameOverComponent(player, nextActor, end, opponentGrid))
+  def notifiedGameOver(nextActor: ActorRef, end: GameEnd.End, opponentGrid: FleetGrid, id: String): Unit = {
+    this.refresh(new GameOverComponent(id, nextActor, end, opponentGrid))
   }
 
   private def init(): Unit = {

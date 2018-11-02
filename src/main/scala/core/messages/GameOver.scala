@@ -11,5 +11,6 @@ import core.model.FleetGrid
   * @param sender The sender of the message
   * @param end The end of the game
   * @param opponentFleet The final fleet of the opponent
+  * @param playerId The id of the player
   */
-class GameOver(val sender: ActorRef, val end: GameEnd.End, val opponentFleet: FleetGrid)
+class GameOver(val sender: ActorRef, val end: GameEnd.End, val opponentFleet: FleetGrid, val playerId: String)

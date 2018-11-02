@@ -27,33 +27,33 @@ class WeakAIPlayer extends Actor {
   }
 
   private def onChooseGameConfig(msg: ChooseOpponent): Unit = {
-    msg.nextActor ! new QuitGame(self)
+    msg.nextActor ! new QuitGame("")
   }
 
   private def onCreateFleet(msg: CreateFleet): Unit = {
-    msg.nextActor ! new FleetCreated(self, FleetGrid(msg.dimension, msg.ships))
+    msg.nextActor ! new FleetCreated(msg.playerId, FleetGrid(msg.dimension, msg.ships))
   }
 
   private def onNotifyCanPlay(msg: NotifyCanPlay): Unit = {
-    play(msg.nextActor, msg.shotGrid)
+    play(msg.nextActor, msg.shotGrid, msg.playerId)
   }
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
       case Failure(ex) => ex match {
-        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid)
+        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid, msg.playerId)
         case _ =>
       }
       case _ =>
     }
   }
 
-  private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
-    sender ! new Play(self, new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height)))
+  private def play(sender: ActorRef, shotGrid: ShotGrid, id: String): Unit = {
+    sender ! new Play(id, new Point(Rand.r.nextInt(shotGrid.dim.width), Rand.r.nextInt(shotGrid.dim.height)))
   }
 
   private def onGameOver(msg: GameOver): Unit = {
-    msg.sender ! new Replay(self, true)
+    msg.sender ! new Replay(msg.playerId, true)
   }
 
 }

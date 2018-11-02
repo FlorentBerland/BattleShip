@@ -12,5 +12,6 @@ import core.model.GenericShip
   * @param nextActor The actor to call when the task is done
   * @param dimension The size of the grid
   * @param ships The fleet configuration he has to use
+  * @param playerId The id the player should use to be recognized
   */
-class CreateFleet(val nextActor: ActorRef, val dimension: Dimension, val ships: Set[GenericShip])
+class CreateFleet(val nextActor: ActorRef, val dimension: Dimension, val ships: Set[GenericShip], val playerId: String)

@@ -7,7 +7,7 @@ import core.model.GenericShip
 
 
 /**
-  * Contains the game config the the GameReplaysManager should use
+  * Contains the game game the the GameReplaysManager should use
   *
   * @param sender The sender of the message
   * @param player1 The first player

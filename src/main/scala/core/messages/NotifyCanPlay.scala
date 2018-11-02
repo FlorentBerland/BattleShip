@@ -9,5 +9,6 @@ import core.model.ShotGrid
   *
   * @param nextActor The actor to send back an answer
   * @param shotGrid The play grid the player should use
+  * @param playerId The id of the player
   */
-class NotifyCanPlay(val nextActor: ActorRef, val shotGrid: ShotGrid)
+class NotifyCanPlay(val nextActor: ActorRef, val shotGrid: ShotGrid, val playerId: String)

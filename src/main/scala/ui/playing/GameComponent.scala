@@ -9,13 +9,13 @@ import ui.DisplayFleetPanel
 
 import scala.util.{Failure, Success, Try}
 
-class GameComponent(val player: ActorRef, val nextActor: ActorRef, fleetGrid: FleetGrid, shotGrid: ShotGrid)
+class GameComponent(val playerId: String, val nextActor: ActorRef, fleetGrid: FleetGrid, shotGrid: ShotGrid)
   extends JPanel {
 
   private val _playerFleetPanel = new DisplayFleetPanel(fleetGrid, new Dimension(300, 300), 10, 10, 10, 10)
   private val _opponentFleetPanel = new GameFleetPanel(shotGrid,
     new Dimension(300, 300), 10, 10, 10, 10,
-    player, nextActor
+    playerId, nextActor
   )
   private val _roundStateDisplay = new JLabel("Play !!!"){ this.setForeground(Color.white) }
   private val _roundStatePanel = new JPanel(){
@@ -25,13 +25,14 @@ class GameComponent(val player: ActorRef, val nextActor: ActorRef, fleetGrid: Fl
 
   init()
 
-  def notifiedToPlay(nextActor: ActorRef, shotGrid: ShotGrid): Unit = {
+  def notifiedToPlay(nextActor: ActorRef, shotGrid: ShotGrid, id: String): Unit = {
     _opponentFleetPanel.cbActor = nextActor
     _opponentFleetPanel.shotGrid = shotGrid
+    _opponentFleetPanel.playerId = id
     _opponentFleetPanel.paint(_opponentFleetPanel.getGraphics)
   }
 
-  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[ShotResult.Value]): Unit = {
+  def notifiedLastRoundResult(shotGrid: ShotGrid, result: Try[ShotResult.Value], id: String): Unit = {
     result match {
       case Success(data) => data match {
         case ShotResult.MISS =>
@@ -54,6 +55,7 @@ class GameComponent(val player: ActorRef, val nextActor: ActorRef, fleetGrid: Fl
       }
     }
     _opponentFleetPanel.shotGrid = shotGrid
+    _opponentFleetPanel.playerId = id
     paint(this.getGraphics)
   }
 

@@ -8,8 +8,17 @@ import core.model.{FleetGrid, GenericShip, Ship}
 import javax.swing.{BoxLayout, JLabel, JPanel}
 import ui.SwingUI
 
+
+/**
+  * Manages the fleet creation
+  *
+  * @param playerId The player id to be known by the game
+  * @param nextActor The actor to notify when the fleet is created
+  * @param dim The grid dimensions
+  * @param expectedShips The ships to place
+  */
 class CreatingComponent(
-                         val player: ActorRef,
+                         val playerId: String,
                          val nextActor: ActorRef,
                          val dim: Dimension,
                          val expectedShips: Set[GenericShip]
@@ -25,7 +34,7 @@ class CreatingComponent(
     this.add(new JPanel(){
       this.setBackground(Color.getColor("LightBlue"))
       this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS))
-      expectedShips.map(es => this.add(SwingUI.button(es.name + " " + es.size,
+      expectedShips.map(es => this.add(SwingUI.button(es.name + " (" + es.size + ")",
         () => editPanel.dragShip(es, true,
           (ship: Option[Ship]) => ship.foreach(s => {
             val newFleet = editPanel.fleet + s
@@ -56,7 +65,7 @@ class CreatingComponent(
         editPanel.fleet = FleetGrid(dim, expectedShips)
         editPanel.paint(editPanel.getGraphics)
       }))
-      this.add(SwingUI.button("Ready !", () => nextActor ! new FleetCreated(player, editPanel.fleet)))
+      this.add(SwingUI.button("Ready !", () => nextActor ! new FleetCreated(playerId, editPanel.fleet)))
     }, BorderLayout.SOUTH)
   }
 

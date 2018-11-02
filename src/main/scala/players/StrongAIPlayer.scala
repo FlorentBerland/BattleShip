@@ -28,9 +28,9 @@ class StrongAIPlayer extends Actor {
 
   ///// AI state:
 
-  // The initial fleet composition. Used to compute what opponent ships are still alive and then
+  // The initial fleet composition by player id. Used to compute what opponent ships are still alive and then
   // eliminate impossible ship locations to aim
-  var fleetComposition: Set[GenericShip] = _
+  var fleetsComposition = Map.empty[String, Set[GenericShip]]
 
 
   private def onChooseGameConfig(msg: ChooseOpponent): Unit = {
@@ -38,18 +38,18 @@ class StrongAIPlayer extends Actor {
   }
 
   private def onCreateFleet(msg: CreateFleet): Unit = {
-    msg.nextActor ! new FleetCreated(self, FleetGrid(msg.dimension, msg.ships))
-    fleetComposition = msg.ships
+    msg.nextActor ! new FleetCreated(msg.playerId, FleetGrid(msg.dimension, msg.ships))
+    fleetsComposition = fleetsComposition + (msg.playerId -> msg.ships)
   }
 
   private def onNotifyCanPlay(msg: NotifyCanPlay): Unit = {
-    play(msg.nextActor, msg.shotGrid)
+    play(msg.nextActor, msg.shotGrid, msg.playerId)
   }
 
   private def onLastRoundResult(msg: LastRoundResult): Unit = {
     msg.result match {
       case Failure(ex) => ex match {
-        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid)
+        case _: IllegalArgumentException => play(msg.sender, msg.shotGrid, msg.playerId)
         case _ =>
       }
       case _ =>
@@ -57,7 +57,8 @@ class StrongAIPlayer extends Actor {
   }
 
   private def onGameOver(msg: GameOver): Unit = {
-    msg.sender ! new Replay(self, true)
+    fleetsComposition = fleetsComposition - msg.playerId
+    msg.sender ! new Replay(msg.playerId, true)
   }
 
 
@@ -65,7 +66,7 @@ class StrongAIPlayer extends Actor {
     * This is almost the same code as the Medium AI but instead of randomly aim when no ship has been found,
     * the coordinates of the next shot are computed using heuristics on the ships locations
     */
-  private def play(sender: ActorRef, shotGrid: ShotGrid): Unit = {
+  private def play(sender: ActorRef, shotGrid: ShotGrid, id: String): Unit = {
     val flatFleet = FleetHelper.flatten(shotGrid)
 
     // Get the longest sequences of horizontally and vertically aligned alive ship squares
@@ -78,22 +79,22 @@ class StrongAIPlayer extends Actor {
 
     val coordinates: Point =
       if(hMax == vMax && hMax == 0){
-        aimWithNormalShipDistributionHeuristic(shotGrid)
+        aimWithNormalShipDistributionHeuristic(shotGrid, fleetsComposition.get(id))
       } else if(hMax >= vMax){
         tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
           tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
-            aimWithNormalShipDistributionHeuristic(shotGrid)
+            aimWithNormalShipDistributionHeuristic(shotGrid, fleetsComposition.get(id))
           )
         )
       } else {
         tryToShootAtVerticalAlignment(vMax, vX, vY, shotGrid).getOrElse(
           tryToShootAtHorizontalAlignment(hMax, hX, hY, shotGrid).getOrElse(
-            aimWithNormalShipDistributionHeuristic(shotGrid)
+            aimWithNormalShipDistributionHeuristic(shotGrid, fleetsComposition.get(id))
           )
         )
       }
 
-    sender ! new Play(self, coordinates)
+    sender ! new Play(id, coordinates)
   }
 
 
@@ -154,18 +155,19 @@ class StrongAIPlayer extends Actor {
     * empty squares sequences by length.
     *
     * @param shotGrid The opponent's grid
+    * @param fleetComposition The fleet composition to retrieve the sunk ship sizes (None should not happen)
     */
-  private def aimWithNormalShipDistributionHeuristic(shotGrid: ShotGrid): Point = {
+  private def aimWithNormalShipDistributionHeuristic(shotGrid: ShotGrid, fleetComposition: Option[Set[GenericShip]]): Point = {
     // Compute the greatest empty sequences of squares not shot and remove the
     // sequences that cannot contain the alive ships
-    val aliveShips = FleetHelper.notSunkShips(fleetComposition, shotGrid)
+    val aliveShips = fleetComposition.map(f => FleetHelper.notSunkShips(f, shotGrid))
     val shotMap = FleetHelper.flattenShotMap(shotGrid)
     val verticalSequences = FleetHelper.longestVerticalSequence[Boolean](shotMap, a => !a)
     val horizontalSequences = FleetHelper.longestHorizontalSequence[Boolean](shotMap, a => !a)
     val distancesToNearestShip = FleetHelper.distanceToNearestObstacle[Option[Ship]](FleetHelper.flatten(shotGrid), _.nonEmpty)
-    val distancesToNearestShot = FleetHelper.distanceToNearestObstacle[Boolean](FleetHelper.flattenShotMap(shotGrid), p => p)
+    val distancesToNearestShot = FleetHelper.distanceToNearestObstacle[Boolean](shotMap, p => p)
 
-    val smallestShipSize = aliveShips.minBy(_.size).size
+    val smallestShipSize = aliveShips.map(_.minBy(_.size).size).getOrElse(0)
 
     // Result example: (smallest ship size = 3, [[ 4, 3, 2, 1, 0, 0, 3, 2, 1 ]]) -> [[ 4, 3, 0, 0, 0, 0, 3, 0, 0 ]]
     val filteredVerticalSequences = verticalSequences.map(_.map(x => if(x < smallestShipSize) 0 else x))

@@ -1,10 +1,8 @@
 package core.messages
 
-import akka.actor.ActorRef
-
 /**
   * Sent by a player who quit the game to warn the receiver of the message
   *
-  * @param sender The actor (player) who quit the game
+  * @param playerId The id of the sender of the message
   */
-class QuitGame(val sender: ActorRef)
+class QuitGame(val playerId: String)

@@ -25,7 +25,7 @@ class ChooseOpponentComponent(val player: ActorRef, val nextActor: ActorRef) ext
       this.add(SwingUI.button("Strong AI",
         () => nextActor ! new OpponentChosen(player, "StrongAIPlayer")))
     }, BorderLayout.CENTER)
-    this.add(SwingUI.button("QuitGame", () => nextActor ! new QuitGame(player)), BorderLayout.SOUTH)
+    this.add(SwingUI.button("QuitGame", () => nextActor ! new QuitGame("")), BorderLayout.SOUTH)
   }
 
 }

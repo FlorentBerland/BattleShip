@@ -10,4 +10,5 @@ import core.model.FleetGrid
   * @param firstPlayer The player who will start and his fleet
   * @param otherPlayer The second player and his fleet
   */
-class StartGame(val sender: ActorRef, val firstPlayer: (ActorRef, FleetGrid), val otherPlayer: (ActorRef, FleetGrid))
+class StartGame(val sender: ActorRef, val firstPlayer: (ActorRef, FleetGrid, String),
+                val otherPlayer: (ActorRef, FleetGrid, String))

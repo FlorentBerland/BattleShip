@@ -7,7 +7,7 @@ import java.awt.Point
 /**
   * This message should be sent to the engine to play a round
   *
-  * @param sender The sender of the message
+  * @param playerUid The identifier of the message sender
   * @param shotCoordinates The coordinates of the shot
   */
-class Play(val sender: ActorRef, val shotCoordinates: Point)
+class Play(val playerUid: String, val shotCoordinates: Point)

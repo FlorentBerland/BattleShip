@@ -14,5 +14,8 @@ import scala.util.Try
   * @param sender The sender of the message
   * @param result The shot result or Failure if the shot was not valid
   * @param shotGrid The fleet after the last round
+  * @param playerId The id of the player
   */
-class LastRoundResult(val sender: ActorRef, val coords: Point, val result: Try[ShotResult.Value], val shotGrid: ShotGrid)
+class LastRoundResult(val sender: ActorRef, val coords: Point,
+                      val result: Try[ShotResult.Value], val shotGrid: ShotGrid,
+                      val playerId: String)

@@ -2,7 +2,7 @@ package core
 
 import java.awt.Dimension
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, InvalidActorNameException, Props}
 import core.messages._
 import core.model.GenericShip
 import players.{HumanPlayer, MediumAIPlayer, StrongAIPlayer, WeakAIPlayer}
@@ -29,13 +29,18 @@ class GameOpponentManager(dimensions: Dimension, ships: Set[GenericShip], replay
 
   private def onUseGameConfig(msg: OpponentChosen): Unit = {
 
-    val player2 = context.actorOf(msg.opponent match {
+    val player2Props = msg.opponent match {
       case "HumanPlayer" => Props[HumanPlayer]
       case "WeakAIPlayer" => Props[WeakAIPlayer]
       case "MediumAIPlayer" => Props[MediumAIPlayer]
       case "StrongAIPlayer" => Props[StrongAIPlayer]
       case _ => Props[WeakAIPlayer]
-    }, msg.opponent)
+    }
+    val player2 = try {
+      context.actorOf(player2Props, msg.opponent)
+    } catch {
+      case _: InvalidActorNameException => context.actorOf(player2Props, msg.opponent + "2")
+    }
 
     val fleetManager = context.actorOf(Props[GameReplaysManager], "GameReplaysManager")
     fleetManager ! new UseGameConfig(self, msg.player, player2, dimensions, ships, replays)

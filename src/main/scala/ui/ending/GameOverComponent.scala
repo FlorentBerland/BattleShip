@@ -9,7 +9,7 @@ import core.model.FleetGrid
 import javax.swing.{JLabel, JPanel}
 import ui.{DisplayFleetPanel, SwingUI}
 
-class GameOverComponent(val player: ActorRef, val nextActor: ActorRef,
+class GameOverComponent(val playerId: String, val nextActor: ActorRef,
                         val end: GameEnd.End, val opponentFleet: FleetGrid
                        ) extends JPanel {
 
@@ -33,8 +33,8 @@ class GameOverComponent(val player: ActorRef, val nextActor: ActorRef,
     ), BorderLayout.CENTER)
     this.add(new JPanel(){
       this.setLayout(new FlowLayout())
-      this.add(SwingUI.button("Replay", () => nextActor ! new Replay(player, true)))
-      this.add(SwingUI.button("Quit game", () => nextActor ! new Replay(player, false)))
+      this.add(SwingUI.button("Replay", () => nextActor ! new Replay(playerId, true)))
+      this.add(SwingUI.button("Quit game", () => nextActor ! new Replay(playerId, false)))
     }, BorderLayout.SOUTH)
   }
 

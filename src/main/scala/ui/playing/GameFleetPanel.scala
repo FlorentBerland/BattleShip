@@ -18,6 +18,8 @@ import ui.DisplayFleetPanel
   * @param mBottom The bottom margin
   * @param mLeft The left margin
   * @param mRight The right margin
+  * @param playerId The id of the player
+  * @param nextActor The actor to notify of the shot
   */
 class GameFleetPanel(initShotGrid: ShotGrid,
                      dimensions: Dimension,
@@ -25,7 +27,7 @@ class GameFleetPanel(initShotGrid: ShotGrid,
                      mBottom: Int,
                      mLeft: Int,
                      mRight: Int,
-                     player: ActorRef,
+                     id: String,
                      nextActor: ActorRef
                         ) extends DisplayFleetPanel(initShotGrid.toFleetGrid, dimensions, mTop, mBottom, mLeft, mRight)
   with MouseListener with MouseMotionListener
@@ -33,6 +35,7 @@ class GameFleetPanel(initShotGrid: ShotGrid,
 
   private var _shotGrid: ShotGrid = initShotGrid
   private var _nextActor: ActorRef = nextActor
+  private var _playerId: String = id
 
   init()
 
@@ -43,6 +46,9 @@ class GameFleetPanel(initShotGrid: ShotGrid,
   }
   def cbActor: ActorRef = _nextActor
   def cbActor_$eq(cbA: ActorRef): Unit = _nextActor = cbA
+  def playerId: String = _playerId
+  def playerId_$eq(id: String): Unit = _playerId = id
+
 
   private def init(): Unit = {
     this.addMouseMotionListener(this)
@@ -64,7 +70,7 @@ class GameFleetPanel(initShotGrid: ShotGrid,
   override def mouseClicked(e: MouseEvent): Unit = {
     e.getButton match {
       case 1 => // Left click
-        squareCursor(getMousePosition).foreach(point => cbActor ! new Play(player, new Point(point.x, point.y)))
+        squareCursor(getMousePosition).foreach(point => cbActor ! new Play(playerId, new Point(point.x, point.y)))
       case _ =>
     }
   }
