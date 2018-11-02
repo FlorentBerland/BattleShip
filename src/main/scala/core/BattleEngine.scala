@@ -20,34 +20,57 @@ class BattleEngine extends Actor {
 
 
   // Internal state:
-  private var _battleState: BattleState = _
-  private var _retriesManager: ActorRef = _
+
+  // Tuple: the state of a battle, the parent of the battle
+  private var games = List.empty[(BattleState, ActorRef)]
 
 
   private def onStartGame(msg: StartGame): Unit = {
-    _retriesManager = msg.sender
-    _battleState = BattleState(msg.firstPlayer, msg.otherPlayer)
-    _battleState.nextTurn._1 ! new GameBegins(self, _battleState.nextTurn._2, _battleState.targetedTurn._2.toOpponentGrid)
-    _battleState.targetedTurn._1 ! new GameBegins(self, _battleState.targetedTurn._2, _battleState.nextTurn._2.toOpponentGrid)
-    _battleState.nextTurn._1 ! new NotifyCanPlay(self, _battleState.targetedTurn._2.toOpponentGrid)
+    // The players should not play in two games at the same time
+    if(findGameByPlayer(msg.firstPlayer._1).isEmpty && findGameByPlayer(msg.otherPlayer._1).isEmpty){
+      games = (BattleState(msg.firstPlayer, msg.otherPlayer), msg.sender) +: games
+      msg.firstPlayer._1 ! new GameBegins(self, msg.firstPlayer._2, msg.otherPlayer._2.toOpponentGrid)
+      msg.otherPlayer._1 ! new GameBegins(self, msg.otherPlayer._2, msg.firstPlayer._2.toOpponentGrid)
+      msg.firstPlayer._1 ! new NotifyCanPlay(self, msg.otherPlayer._2.toOpponentGrid)
+    }
   }
 
   private def onPlay(msg: Play): Unit = {
-    val (newState, newFleet, shotResult) = _battleState.play(msg.sender, msg.shotCoordinates)
+    val game = findGameByPlayer(msg.sender)
+    if(game.isEmpty) return
+
+    val battleState = game.get._1
+    val replaysManager = game.get._2
+
+    val (newState, newFleet, shotResult) = battleState.play(msg.sender, msg.shotCoordinates)
     shotResult match {
       case Success(_) =>
         newState.targetedTurn._1 ! new LastRoundResult(self, msg.shotCoordinates, shotResult, newFleet.toOpponentGrid)
         newState.nextTurn._1 ! new NotifyHasBeenShot(msg.shotCoordinates, newFleet)
         if(newState.nextTurn._2.isDestroyed){
-          newState.targetedTurn._1 ! new GameOver(_retriesManager, GameEnd.VICTORY, newFleet)
-          newState.nextTurn._1 ! new GameOver(_retriesManager, GameEnd.DEFEAT, newState.targetedTurn._2)
-          _retriesManager ! new GameFinished(newState.targetedTurn._1)
+          newState.targetedTurn._1 ! new GameOver(replaysManager, GameEnd.VICTORY, newFleet)
+          newState.nextTurn._1 ! new GameOver(replaysManager, GameEnd.DEFEAT, newState.targetedTurn._2)
+          replaysManager ! new GameFinished(self, newState.targetedTurn._1)
+          games = games.filterNot(_ == game.get)
         } else {
           newState.nextTurn._1 ! new NotifyCanPlay(self, newState.targetedTurn._2.toOpponentGrid)
+          games = (newState, replaysManager) +: games.filterNot(_ == game.get)
         }
       case Failure(_) =>
         msg.sender ! new LastRoundResult(self, msg.shotCoordinates, shotResult, newFleet.toOpponentGrid)
     }
-    _battleState = newState
+
+
+
   }
+
+
+  /**
+    * Find the game containing the given player
+    *
+    * @param player The player to retrieve
+    * @return The game found
+    */
+  private def findGameByPlayer(player: ActorRef): Option[(BattleState, ActorRef)] =
+    games.find(g => g._1.nextTurn._1 == player || g._1.targetedTurn._1 == player)
 }

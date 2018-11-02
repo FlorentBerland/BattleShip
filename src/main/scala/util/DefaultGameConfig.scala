@@ -14,4 +14,5 @@ object DefaultGameConfig {
     new GenericShip("Submarine", 3),
     new GenericShip("Destroyer", 2)
   )
+  def replays: Int = 100
 }

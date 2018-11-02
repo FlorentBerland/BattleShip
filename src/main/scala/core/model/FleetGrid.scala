@@ -171,7 +171,7 @@ object FleetGrid {
           maximizes the distance between ships. Greater than 1 may result in an infinite retry loop
           (the ship cannot be placed)
          */
-        val randomFactor = .67
+        val randomFactor = .75
         val threshold = (maxValue - expectedShips.head.size/2) * randomFactor
 
         // Get all the coordinates that have a distance to the nearest ship greater than the threshold:

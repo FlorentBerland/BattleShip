@@ -11,7 +11,7 @@ import ui.SwingUI
 class HumanPlayer extends Actor{
 
   override def receive: Receive = {
-    case msg: ChooseGameConfig => onChooseGameConfig(msg)
+    case msg: ChooseOpponent => onChooseGameConfig(msg)
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: GameBegins => onGameBegins(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
@@ -24,7 +24,7 @@ class HumanPlayer extends Actor{
 
   private val _ui = new SwingUI(self)
 
-  private def onChooseGameConfig(msg: ChooseGameConfig): Unit = {
+  private def onChooseGameConfig(msg: ChooseOpponent): Unit = {
     _ui.displayChoose(msg.nextActor)
   }
 

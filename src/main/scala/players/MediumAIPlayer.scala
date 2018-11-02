@@ -17,7 +17,7 @@ import scala.util.Failure
 class MediumAIPlayer extends Actor {
 
   override def receive: Receive = {
-    case msg: ChooseGameConfig => onChooseGameConfig(msg)
+    case msg: ChooseOpponent => onChooseGameConfig(msg)
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
@@ -26,8 +26,8 @@ class MediumAIPlayer extends Actor {
     case _ =>
   }
 
-  private def onChooseGameConfig(msg: ChooseGameConfig): Unit = {
-    msg.nextActor ! new UseGameConfig(self, "WeakAIPlayer")
+  private def onChooseGameConfig(msg: ChooseOpponent): Unit = {
+    msg.nextActor ! new OpponentChosen(self, "WeakAIPlayer")
   }
 
   private def onCreateFleet(msg: CreateFleet): Unit = {

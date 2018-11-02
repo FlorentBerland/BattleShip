@@ -7,4 +7,4 @@ import akka.actor.ActorRef
   *
   * @param nextActor The actor to give the config when chosen
   */
-class ChooseGameConfig(val nextActor: ActorRef)
+class ChooseOpponent(val nextActor: ActorRef)

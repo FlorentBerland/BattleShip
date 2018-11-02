@@ -17,7 +17,7 @@ import scala.util.Failure
 class WeakAIPlayer extends Actor {
 
   override def receive: Receive = {
-    case msg: ChooseGameConfig => onChooseGameConfig(msg)
+    case msg: ChooseOpponent => onChooseGameConfig(msg)
     case msg: CreateFleet => onCreateFleet(msg)
     case msg: NotifyCanPlay => onNotifyCanPlay(msg)
     case msg: LastRoundResult => onLastRoundResult(msg)
@@ -26,7 +26,7 @@ class WeakAIPlayer extends Actor {
     case _ =>
   }
 
-  private def onChooseGameConfig(msg: ChooseGameConfig): Unit = {
+  private def onChooseGameConfig(msg: ChooseOpponent): Unit = {
     msg.nextActor ! new QuitGame(self)
   }
 
