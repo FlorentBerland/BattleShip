@@ -19,7 +19,7 @@ class FleetHelperSpec extends FunSuite {
 
   val fleet = FleetGrid(
     new Dimension(3, 3),
-    Set(Ship(Set((new Point(0, 1), true), (new Point(1, 1), true))),
+    Set(Ship(Set((new Point(0, 1), false), (new Point(1, 1), false))),
       Ship(Set((new Point(2, 2), true)))),
     Set(new Point(0, 1), new Point(1, 2), new Point(1, 1)) // Ship 1 is sunk and a shot is missed
   )

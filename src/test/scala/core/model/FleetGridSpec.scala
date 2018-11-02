@@ -15,13 +15,13 @@ class FleetGridSpec extends FlatSpec with Matchers {
   }
 
   it should "be a failure if the shot is out of bounds or redone on a previously shot square" in {
-    fleet.shot(new Point(0, 3))._2.isFailure should be (true)
+    fleet.shot(new Point(-1, 3))._2.isFailure should be (true)
     fleet.shot(new Point(7, 11))._2.isFailure should be (true)
     fleet.shot(new Point(1, 1))._1.shot(new Point(1, 1))._2.isFailure should be (true)
   }
 
   it should "send 'miss' if a shot misses" in {
-    fleet.shot(new Point(10, 10))._2 should be (Success(ShotResult.MISS))
+    fleet.shot(new Point(9, 9))._2 should be (Success(ShotResult.MISS))
   }
 
   it should "send 'hit' if a shot hit a ship" in {

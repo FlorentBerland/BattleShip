@@ -14,7 +14,7 @@ class ShipSpec extends FlatSpec with Matchers {
   }
 
   it should "not be destroyed if the size is greater than 0" in {
-    ship.isDestroyed should not be false
+    ship.isDestroyed should not be true
   }
 
   it should "not be affected if a shot misses" in {
