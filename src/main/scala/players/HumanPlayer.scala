@@ -22,6 +22,11 @@ class HumanPlayer extends Actor{
     case _ =>
   }
 
+  override def postStop(): Unit = {
+    _ui.dispose()
+    super.postStop()
+  }
+
   private val _ui = new SwingUI(self)
 
   private def onChooseGameConfig(msg: ChooseOpponent): Unit = {

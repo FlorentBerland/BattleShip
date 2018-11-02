@@ -118,10 +118,7 @@ class GameReplaysManager extends Actor {
     }
   }
 
-  private def onQuitGame(msg: QuitGame): Unit = {
-    val game = findGameByPlayer(msg.sender)
-    game.foreach(g => finishGame(g._1))
-  }
+  private def onQuitGame(msg: QuitGame): Unit = findGameByPlayer(msg.sender).foreach(g => finishGame(g._1))
 
 
   /**

@@ -7,13 +7,11 @@ import core.messages._
 import core.model.GenericShip
 import players.{HumanPlayer, MediumAIPlayer, StrongAIPlayer, WeakAIPlayer}
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
 
 /**
   * Manages the initial configuration, meaning the type of opponent
   */
-class GameConfigManager(dimensions: Dimension, ships: Set[GenericShip], replays: Int) extends Actor {
+class GameOpponentManager(dimensions: Dimension, ships: Set[GenericShip], replays: Int) extends Actor {
 
   override def receive: Receive = {
     case msg: InitGame => onInitGame(msg)

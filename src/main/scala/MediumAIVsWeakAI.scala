@@ -1,5 +1,5 @@
 import akka.actor.{ActorSystem, Props}
-import core.GameConfigManager
+import core.GameOpponentManager
 import core.messages.InitGame
 import players._
 import util.DefaultGameConfig
@@ -12,7 +12,7 @@ object MediumAIVsWeakAI extends App {
 
 
   val system = ActorSystem("BattleShip")
-  val manager = system.actorOf(Props(classOf[GameConfigManager], dimensions, ships, replays), "ConfigManager")
+  val manager = system.actorOf(Props(classOf[GameOpponentManager], dimensions, ships, replays), "ConfigManager")
   manager ! new InitGame(Props[MediumAIPlayer])
 
 }
